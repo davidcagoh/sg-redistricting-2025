@@ -21,6 +21,7 @@ data/raw/sla_cadastral/
 data/reference/pdfs_to_digitize/
 data/reference/*.pdf
 data/reference/*.png
+data/reference/*.zip
 
 # Research PDFs
 related-literature/*.pdf
