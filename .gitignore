@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.coverage
+.venv/
+
+# OS
+.DS_Store
+
+# Generated outputs (rebuilt by pipeline scripts)
+output/
+data/processed/
+
+# Large source data — too large for git; acquire separately
+data/raw/hdb/
+data/raw/polling_community/
+data/raw/sla_cadastral/
+
+# Large reference archives and binaries
+data/reference/pdfs_to_digitize/
+data/reference/*.pdf
+data/reference/*.png
+
+# Research PDFs
+related-literature/*.pdf

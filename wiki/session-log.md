@@ -1,5 +1,29 @@
 # Session Log
 
+## 2026-04-13 (session 6) — Repo cleanup: remove root-level duplicates, add .gitignore, refresh README
+
+### What was done
+
+- Deleted 10 root-level duplicate directories/files (all confirmed identical to `data/raw/` or `data/reference/`)
+- Moved `QGIS-3.44-GentleGISIntroduction-en.pdf` to `related-literature/`
+- Removed empty `docs/` and `data/raw/geospatial_subzone/` directories
+- Created `.gitignore`: excludes `__pycache__`, `.DS_Store`, `.coverage`, `.venv`, `output/`, `data/processed/`, large raw data dirs (`hdb/`, `polling_community/`, `sla_cadastral/`), large reference binaries
+- Removed `__pycache__` directories from git tracking (had been committed)
+- Rewrote `README.md` to cover both the preprocessing pipeline and the MCMC analysis pipeline with correct commands
+
+### State at end of session
+
+Clean. Repo root is now minimal: `src/`, `tests/`, `data/`, `wiki/`, `related-literature/`, `output/`, `CLAUDE.md`, `README.md`, `gerrymandering_project.qgz`, `sanity.py`, `requirements.txt`, `pyproject.toml`.
+
+### What to do next session
+
+1. Run `python -m src.analysis.cli assign-actual --year 2020` and `--year 2025` — generate actual assignment Parquets
+2. Run `python -m src.analysis.cli run-ensemble --run-id sg2025 --n-steps 10000` — generate ensemble
+3. Run `python -m src.analysis.cli diff ...` — produce diff report, plots, and summary table
+4. Review `output/` for outlier signals in HDB town-splitting and population deviation
+
+---
+
 ## 2026-04-13 (session 5) — Phase 5 complete; full pipeline implemented; 481 tests green
 
 ### What was done

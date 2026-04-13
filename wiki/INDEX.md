@@ -1,8 +1,8 @@
 # Project Wiki — Singapore Electoral Redistricting Analysis
 
-## Status (2026-04-13, session 4)
+## Status (2026-04-13, session 6)
 
-**481 tests passing. Implementation complete.**
+**481 tests passing. Implementation complete. Repo cleaned.**
 
 | Phase | Status |
 |-------|--------|
@@ -15,9 +15,9 @@
 
 ## Next steps (analysis)
 
-1. Run `python -m src.analysis.cli assign-actual --year 2020` and `--year 2025`
-2. Run `python -m src.analysis.cli run-ensemble` to generate the ensemble
-3. Run `python -m src.analysis.cli diff --run-id <id> --year-2020-run-id <id> --year-2025-run-id <id>`
+1. `python -m src.analysis.cli assign-actual --year 2020` and `--year 2025`
+2. `python -m src.analysis.cli run-ensemble --run-id sg2025 --n-steps 10000`
+3. `python -m src.analysis.cli diff --run-id <diff_id> --year-2020-run-id <id> --year-2025-run-id <id>`
 4. Review outputs in `output/`
 
 ## Wiki files
