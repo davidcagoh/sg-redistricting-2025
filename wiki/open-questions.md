@@ -2,9 +2,7 @@
 
 ## Unresolved
 
-1. **What is the primary analysis goal?**  
-   Options: (a) population deviation across constituencies, (b) ethnic composition per GRC/SMC, (c) boundary change diff 2020→2025, (d) elector count vs. population mismatch.  
-   _Blocking: nothing can be scoped until this is answered._
+1. ~~**What is the primary analysis goal?**~~ — See Resolved.
 
 2. **How to obtain polling district polygons?**  
    PDFs and ZIPs exist in `data/reference/pdfs_to_digitize/`. Options: manual digitization in QGIS, OCR + polygon extraction, community shapefile (if license permits).  
@@ -16,6 +14,16 @@
 4. **Census–subzone match coverage**  
    Some URA subzones have no Census row (non-residential, small). Is this gap material for the intended analysis?
 
+5. **How to handle GRC multi-member structure in ensemble generation?**  
+   US ensemble methods assume single-seat districts. Singapore GRCs hold 3–5 seats each with different target populations. Options: (a) ignore structure — partition into k=33 equal-population units ignoring seat count per unit, (b) fix a seat-count vector and encode target populations per district type. Option (a) loses realism but is tractable. Option (b) requires deciding what the seat-count vector should be — which is itself a policy lever and could be the gamed variable.
+
+6. **What are the HDB town boundaries as a GIS layer?**  
+   HDB towns are the natural "communities of interest" for Singapore (analogous to US counties). We have HDB block data in `data/raw/hdb/` but need to confirm whether town-level polygons are derivable or available separately.
+
+7. **Is the 2020→2025 subzone reassignment recoverable from GeoJSON diff?**  
+   If we can spatially join 2020 and 2025 electoral boundary GeoJSONs to subzones, we can map which subzones changed constituency. This enables a targeted descriptive analysis without needing the ensemble.
+
 ## Resolved
 
-_None yet._
+1. **What is the primary analysis goal?** — Resolved 2026-04-12.  
+   Primary: community-of-interest splitting (HDB towns as communities, counting cross-boundary splits in ensemble vs. actual plan). Secondary: population deviation outlier test. Partisan seat analysis is not feasible due to absence of public precinct-level vote returns. See `decisions.md`.

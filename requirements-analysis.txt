@@ -1,0 +1,5 @@
+# Analysis pipeline dependencies (install in addition to base environment)
+geopandas>=0.14
+gerrychain>=0.3
+pyarrow>=14.0
+typer>=0.9
