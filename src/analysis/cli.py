@@ -16,11 +16,13 @@ import logging
 from pathlib import Path
 from typing import Any
 
+import geopandas as gpd
 import networkx as nx
 import pandas as pd
 
 from src.analysis.assign_actual import assign_actual_plan
 from src.analysis.config import EnsembleConfig, PathsConfig
+from src.analysis.io_layer import load_electoral_boundaries
 from src.analysis.diff_2020_2025 import (
     build_diff_report,
     load_actual_assignments,
@@ -39,12 +41,12 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
-def _load_graph_for_actual(paths: PathsConfig) -> nx.Graph:
-    """Load the subzone graph used for actual plan assignment."""
+def _load_graph_for_actual(paths: PathsConfig) -> tuple[nx.Graph, gpd.GeoDataFrame]:
+    """Load the subzone graph and filtered GDF used for actual plan assignment."""
     from src.analysis.ensemble import build_pipeline_inputs
 
-    graph, _gdf, _geoms = build_pipeline_inputs(paths)
-    return graph
+    graph, filtered_gdf, _geoms = build_pipeline_inputs(paths)
+    return graph, filtered_gdf
 
 
 def _save_actual_assignment(assignment: dict[int, str | None], out_path: Path) -> None:
@@ -86,8 +88,9 @@ def _cmd_assign_actual(args: argparse.Namespace) -> None:
     year: int = args.year
     paths = _make_paths_config()
 
-    graph = _load_graph_for_actual(paths)
-    assignment = assign_actual_plan(year, graph, paths)
+    graph, filtered_gdf = _load_graph_for_actual(paths)
+    electoral = load_electoral_boundaries(year)
+    assignment = assign_actual_plan(year, graph, filtered_gdf, electoral)
 
     out_path = OUTPUT / "actual_assignments" / f"{year}.parquet"
     _save_actual_assignment(assignment, out_path)

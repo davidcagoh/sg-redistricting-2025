@@ -63,9 +63,9 @@ def build_pipeline_inputs(
     subzone_geoms
         ``{row_index: geometry}`` mapping for the filtered subzones.
     """
-    subzone_layer = load_subzones_with_population(paths.processed_dir)
-    hdb_buildings = load_hdb_buildings(paths.raw_dir)
-    hdb_properties = load_hdb_property_table(paths.raw_dir)
+    subzone_layer = load_subzones_with_population()
+    hdb_buildings = load_hdb_buildings()
+    hdb_properties = load_hdb_property_table()
 
     graph = build_subzone_graph(subzone_layer.svy21)
     filtered_graph, _excluded = filter_for_mcmc(graph)
@@ -162,9 +162,13 @@ def run_ensemble(config: EnsembleConfig, paths: PathsConfig) -> Path:
 
         seed_assignment = make_seed_partition(graph, config)
         initial_partition = build_initial_partition(graph, seed_assignment, config)
-        constraints = build_constraints(config)
+        raw_constraints = build_constraints(config)
         acceptance = make_acceptance(config)
-        chain = build_chain(initial_partition, config)
+        # constraints[1] is a partial(within_percent_of_ideal_population, percent=...)
+        # that must be called with the initial partition to produce a live Bounds callable.
+        pop_bounds = raw_constraints[1](initial_partition)
+        live_constraints = [raw_constraints[0], pop_bounds]
+        chain = build_chain(initial_partition, config, live_constraints, acceptance)
 
         metrics_rows: list[dict] = []
         assignment_rows: list[dict] = []
