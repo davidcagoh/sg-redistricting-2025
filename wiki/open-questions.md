@@ -1,5 +1,7 @@
 # Open Questions
 
+Part of the [project wiki](INDEX.md). See also: [Decisions](decisions.md) · [Methodology](methodology.md) · [Issues](issues.md)
+
 ## Unresolved
 
 1. ~~**What is the primary analysis goal?**~~ — See Resolved.
@@ -14,8 +16,8 @@
 4. **Census–subzone match coverage**  
    Some URA subzones have no Census row (non-residential, small). Is this gap material for the intended analysis?
 
-5. **How to handle GRC multi-member structure in ensemble generation?**  
-   US ensemble methods assume single-seat districts. Singapore GRCs hold 3–5 seats each with different target populations. Options: (a) ignore structure — partition into k=33 equal-population units ignoring seat count per unit, (b) fix a seat-count vector and encode target populations per district type. Option (a) loses realism but is tractable. Option (b) requires deciding what the seat-count vector should be — which is itself a policy lever and could be the gamed variable.
+5. **How to handle GRC multi-member structure in ensemble generation?** {#grc-multi-member-structure}  
+   US ensemble methods assume single-seat districts. Singapore GRCs hold 3–5 seats each with different target populations. Options: (a) ignore structure — partition into k=33 equal-population units ignoring seat count per unit, (b) fix a seat-count vector and encode target populations per district type. Option (a) loses realism but is tractable. Option (b) requires deciding what the seat-count vector should be — which is itself a policy lever and could be the gamed variable. Related: the actual 2020/2025 plans have 31 districts (not 33); see [Decisions](decisions.md#on-k33-vs-k31) and [Seeding](seeding.md#fix-b) for the k=33 vs k=31 methodological discussion.
 
 6. **What are the HDB town boundaries as a GIS layer?**  
    HDB towns are the natural "communities of interest" for Singapore (analogous to US counties). We have HDB block data in `data/raw/hdb/` but need to confirm whether town-level polygons are derivable or available separately.

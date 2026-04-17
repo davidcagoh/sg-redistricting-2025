@@ -1,5 +1,88 @@
 # Session Log
 
+## 2026-04-17 (session 9) — Wiki knowledge graph refactor + BFS seeder (Fix A) + ensemble unblocked
+
+### What was done
+
+- **Wiki refactored into Wikipedia-style knowledge graph:**
+  - `related-literature/` moved to `wiki/literature/` (git mv, history preserved)
+  - `wiki/literature/INDEX.md` — annotated bibliography of all 8 papers
+  - `wiki/methodology.md` — full ensemble framework documentation with NC literature comparison
+  - `wiki/seeding.md` — seeding problem root cause, Fix A vs Fix B literature reasoning, current state
+  - All existing wiki pages updated with bidirectional cross-links
+  - `wiki/INDEX.md` — expanded into a proper hub with navigation table and key cross-link paths
+
+- **Literature reasoning for Fix A vs Fix B:**
+  - Fix A (BFS seeder): literature-faithful — neutral random initialization, no circularity
+  - Fix B (actual plan as seed): rejected as methodologically circular per Herschlag et al. NC practice of running chains from independent random seeds to verify mixing
+  - Full argument documented in `wiki/seeding.md` and `wiki/decisions.md`
+
+- **BFS seeder implemented** (`src/analysis/seed_plans.py`):
+  - `_bfs_seed_partition()`: greedy BFS growth from non-zero-pop seeds + `_local_swap_pass()` for population balance
+  - `make_seed_partition()` now two-phase: `recursive_tree_part` (N attempts) → BFS fallback (10 attempts)
+  - 487 tests passing (was 481; added 6 BFS-specific tests; fixed 6 pre-existing CLI test regressions from session 7/8)
+
+- **Ensemble unblocked:** `run-ensemble --run-id sg2025 --n-steps 10000` started successfully; chain is running
+
+### State at end of session
+
+Ensemble running in background. `BipartitionWarning` messages are normal (rejected ReCom proposals). Check `/tmp/ensemble_sg2025_v2.log`.
+
+### What to do next session
+
+1. Wait for ensemble to complete, check `output/runs/sg2025/`
+2. `python -m src.analysis.cli diff --run-id diff_sg2025 --year-2020-run-id sg2025 --year-2025-run-id sg2025`
+3. Review `output/runs/sg2025/*.png` and `summary_table.csv`
+4. Interpret percentile ranks for HDB town-splitting and population deviation
+
+---
+
+## 2026-04-13 (session 8) — Diagnose seeding failure; write issues.md
+
+### What was done
+
+- Ran `run-ensemble --run-id sg2025 --n-steps 10000` → failed with `SeedPartitionError` at the seeding step
+- Root-caused the failure: GerryChain's `recursive_tree_part` cannot bisect the real Singapore graph because ~36 % of subzones have `pop_total=0`, and some recursion sub-graphs have no balanced spanning-tree cut
+- Inspected `output/actual_assignments/2020.parquet` (328 nodes, 31 districts)
+- Identified 4 uninhabited island nodes (27 SUDONG, 28 SEMAKAU, 29 SOUTHERN GROUP, 308 PULAU SELETAR) absent from actual assignments
+- Documented two proposed fixes (BFS seeder, lower k to 31) in `wiki/issues.md`
+
+### State at end of session
+
+**Ensemble blocked.** `assign-actual` Parquets are written and correct. The MCMC chain itself has not run yet.
+
+### What to do next session
+
+1. Implement Fix A from `wiki/issues.md`: add `_bfs_seed_partition` to `src/analysis/seed_plans.py`
+2. Test that `make_seed_partition` returns a valid partition on the real graph (`validate_partition` passes)
+3. Re-run `python -m src.analysis.cli run-ensemble --run-id sg2025 --n-steps 10000`
+4. Once ensemble completes, run `diff` subcommand and review output plots/table
+
+See `wiki/issues.md` for full root cause, pseudocode, and reproduction steps.
+
+---
+
+## 2026-04-13 (session 7) — Sync docs; run actual MCMC analysis
+
+### What was done
+
+- Updated `wiki/implementation-plan.md`: marked Phase 5 complete (was stale at "401 tests / Phase 5 remains")
+- Ran `assign-actual --year 2020` and `assign-actual --year 2025` → wrote actual assignment Parquets to `output/actual_assignments/`
+- Ran `run-ensemble --run-id sg2025 --n-steps 10000` → generating ensemble in background
+- Outputs to vet: `output/actual_assignments/2020.parquet`, `output/actual_assignments/2025.parquet`, `output/runs/sg2025/`
+
+### State at end of session
+
+Analysis pipeline running. Once ensemble completes, run `diff` subcommand.
+
+### What to do next session
+
+1. `python -m src.analysis.cli diff --run-id diff_sg2025 --year-2020-run-id sg2025 --year-2025-run-id sg2025`
+2. Review `output/runs/sg2025/diff_report.json`, `output/runs/sg2025/*.png`, `output/runs/sg2025/summary_table.csv`
+3. Interpret percentile ranks for HDB town-splitting and population deviation
+
+---
+
 ## 2026-04-13 (session 6) — Repo cleanup: remove root-level duplicates, add .gitignore, refresh README
 
 ### What was done

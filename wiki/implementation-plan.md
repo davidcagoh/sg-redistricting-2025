@@ -1,6 +1,6 @@
 # Implementation Plan
 
-Phases 0–4 complete (401 tests). Only Phase 5 remains.
+**All 6 phases complete. 481 tests passing.**
 
 ## Completed phases (summary)
 
@@ -11,8 +11,9 @@ Phases 0–4 complete (401 tests). Only Phase 5 remains.
 | 2: MCMC skeleton | config.py, seed_plans.py, mcmc/constraints+acceptance+recom | ~40 |
 | 3: Metrics | metrics/population+compactness+splitting+registry | ~50 |
 | 4: Ensemble driver | ensemble.py, assign_actual.py | ~52 |
+| 5: Diff + Reporting + CLI | diff_2020_2025.py, reporting/plots.py, reporting/tables.py, cli.py | ~80 |
 
-## Phase 5: Diff + Reporting + CLI
+## Phase 5 (completed): Diff + Reporting + CLI
 
 ### 5.1 `src/analysis/diff_2020_2025.py`
 

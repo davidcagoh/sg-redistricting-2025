@@ -152,7 +152,9 @@ class TestAssignActual:
 
         with (
             patch("src.analysis.cli.assign_actual_plan", mock_assign),
-            patch("src.analysis.cli._load_graph_for_actual", return_value=MagicMock()),
+            patch("src.analysis.cli._load_graph_for_actual",
+                  return_value=(MagicMock(), MagicMock())),
+            patch("src.analysis.cli.load_electoral_boundaries", return_value=MagicMock()),
             patch("src.analysis.cli._save_actual_assignment"),
         ):
             _run_main(*args)
@@ -182,7 +184,9 @@ class TestAssignActual:
 
         with (
             patch("src.analysis.cli.assign_actual_plan", return_value={0: "ED"}),
-            patch("src.analysis.cli._load_graph_for_actual", return_value=MagicMock()),
+            patch("src.analysis.cli._load_graph_for_actual",
+                  return_value=(MagicMock(), MagicMock())),
+            patch("src.analysis.cli.load_electoral_boundaries", return_value=MagicMock()),
             patch("src.analysis.cli._save_actual_assignment", mock_save),
         ):
             _run_main("assign-actual", "--year", "2020")
@@ -194,7 +198,9 @@ class TestAssignActual:
 
         with (
             patch("src.analysis.cli.assign_actual_plan", return_value={0: "ED"}),
-            patch("src.analysis.cli._load_graph_for_actual", return_value=MagicMock()),
+            patch("src.analysis.cli._load_graph_for_actual",
+                  return_value=(MagicMock(), MagicMock())),
+            patch("src.analysis.cli.load_electoral_boundaries", return_value=MagicMock()),
             patch("src.analysis.cli._save_actual_assignment", mock_save),
         ):
             _run_main("assign-actual", "--year", "2020")
@@ -207,7 +213,9 @@ class TestAssignActual:
 
         with (
             patch("src.analysis.cli.assign_actual_plan", return_value={0: "ED"}),
-            patch("src.analysis.cli._load_graph_for_actual", return_value=MagicMock()),
+            patch("src.analysis.cli._load_graph_for_actual",
+                  return_value=(MagicMock(), MagicMock())),
+            patch("src.analysis.cli.load_electoral_boundaries", return_value=MagicMock()),
             patch("src.analysis.cli._save_actual_assignment", mock_save),
         ):
             _run_main("assign-actual", "--year", "2025")

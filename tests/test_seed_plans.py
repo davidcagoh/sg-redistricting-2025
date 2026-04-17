@@ -9,13 +9,19 @@ Test classes:
 """
 from __future__ import annotations
 
+import random
 from unittest.mock import patch
 
 import networkx as nx
 import pytest
 
 from src.analysis.config import EnsembleConfig
-from src.analysis.seed_plans import SeedPartitionError, make_seed_partition, validate_partition
+from src.analysis.seed_plans import (
+    SeedPartitionError,
+    _bfs_seed_partition,
+    make_seed_partition,
+    validate_partition,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -262,13 +268,17 @@ class TestMakeSeedPartition:
     def test_raises_seed_partition_error_on_failure(
         self, balanced_6node_path: nx.Graph, config_k2: EnsembleConfig
     ) -> None:
-        """SeedPartitionError is raised when all attempts fail."""
+        """SeedPartitionError is raised when both recursive_tree_part and BFS fallback fail."""
         with patch(
             "src.analysis.seed_plans.recursive_tree_part",
             side_effect=Exception("partition failed"),
         ):
-            with pytest.raises(SeedPartitionError):
-                make_seed_partition(balanced_6node_path, config_k2)
+            with patch(
+                "src.analysis.seed_plans._bfs_seed_partition",
+                side_effect=Exception("bfs failed"),
+            ):
+                with pytest.raises(SeedPartitionError):
+                    make_seed_partition(balanced_6node_path, config_k2)
 
     def test_seed_partition_error_is_exception_subclass(self) -> None:
         """SeedPartitionError is a subclass of Exception."""
@@ -288,25 +298,44 @@ class TestMakeSeedPartition:
     def test_make_seed_partition_uses_max_attempts(
         self, balanced_6node_path: nx.Graph
     ) -> None:
-        """make_seed_partition retries up to max_attempts_per_step times before raising."""
+        """recursive_tree_part is called exactly max_attempts_per_step times before BFS fallback."""
         config = EnsembleConfig(
             k_districts=2, pop_tolerance=0.10, seed=42, max_attempts_per_step=3
         )
         call_count = 0
 
-        def failing_then_never_success(*args, **kwargs):
+        def always_fails(*args, **kwargs):
             nonlocal call_count
             call_count += 1
             raise Exception("always fails")
 
+        # recursive_tree_part always fails; BFS will succeed on this simple graph
         with patch(
             "src.analysis.seed_plans.recursive_tree_part",
-            side_effect=failing_then_never_success,
+            side_effect=always_fails,
         ):
-            with pytest.raises(SeedPartitionError):
-                make_seed_partition(balanced_6node_path, config)
+            result = make_seed_partition(balanced_6node_path, config)
 
+        # recursive_tree_part called exactly max_attempts_per_step times
         assert call_count == config.max_attempts_per_step
+        # BFS fallback succeeded
+        assert isinstance(result, dict)
+        assert set(result.keys()) == set(balanced_6node_path.nodes)
+
+    def test_bfs_fallback_succeeds_when_recursive_tree_part_fails(
+        self, balanced_6node_path: nx.Graph, config_k2: EnsembleConfig
+    ) -> None:
+        """BFS fallback produces a valid partition when recursive_tree_part always fails."""
+        with patch(
+            "src.analysis.seed_plans.recursive_tree_part",
+            side_effect=Exception("always fails"),
+        ):
+            result = make_seed_partition(balanced_6node_path, config_k2)
+
+        assert isinstance(result, dict)
+        assert set(result.keys()) == set(balanced_6node_path.nodes)
+        assert len(set(result.values())) == config_k2.k_districts
+        validate_partition(balanced_6node_path, result, config_k2)
 
     def test_retries_on_transient_failure(self, balanced_6node_path: nx.Graph) -> None:
         """make_seed_partition succeeds if a later attempt works after an early failure."""
@@ -332,3 +361,56 @@ class TestMakeSeedPartition:
 
         assert result == valid_assignment
         assert call_count == 2
+
+
+# ---------------------------------------------------------------------------
+# TestBfsSeedPartition
+# ---------------------------------------------------------------------------
+
+
+class TestBfsSeedPartition:
+    """Direct tests for _bfs_seed_partition on synthetic graphs."""
+
+    @pytest.fixture
+    def rng(self) -> random.Random:
+        return random.Random(42)
+
+    def test_all_nodes_assigned(self, rng: random.Random) -> None:
+        """BFS seeder assigns every graph node."""
+        G = make_chain_graph(6, pop_per_node=100)
+        config = EnsembleConfig(k_districts=2, pop_tolerance=0.10, seed=42)
+        result = _bfs_seed_partition(G, config, rng)
+        assert set(result.keys()) == set(G.nodes)
+
+    def test_correct_district_count(self, rng: random.Random) -> None:
+        """BFS seeder produces exactly k_districts."""
+        G = make_chain_graph(6, pop_per_node=100)
+        config = EnsembleConfig(k_districts=2, pop_tolerance=0.10, seed=42)
+        result = _bfs_seed_partition(G, config, rng)
+        assert len(set(result.values())) == 2
+
+    def test_result_passes_validate_on_uniform_graph(self, rng: random.Random) -> None:
+        """BFS seeder produces a valid partition on a uniform-population path graph."""
+        G = make_chain_graph(6, pop_per_node=100)
+        config = EnsembleConfig(k_districts=2, pop_tolerance=0.10, seed=42)
+        result = _bfs_seed_partition(G, config, rng)
+        validate_partition(G, result, config)
+
+    def test_handles_zero_pop_nodes(self, rng: random.Random) -> None:
+        """BFS seeder assigns zero-pop nodes without raising."""
+        # 6-node path: alternating zero and nonzero pop
+        G = nx.path_graph(6)
+        for i, n in enumerate(G.nodes):
+            G.nodes[n]["pop_total"] = 0 if i % 2 == 0 else 200
+        config = EnsembleConfig(k_districts=2, pop_tolerance=0.50, seed=42)
+        result = _bfs_seed_partition(G, config, rng)
+        assert set(result.keys()) == set(G.nodes)
+        assert len(set(result.values())) == 2
+
+    def test_grid_graph_k4(self, rng: random.Random) -> None:
+        """BFS seeder works on a 4x4 grid partitioned into 4 districts."""
+        G = make_grid_graph(4, 4, pop_per_node=100)
+        config = EnsembleConfig(k_districts=4, pop_tolerance=0.10, seed=42)
+        result = _bfs_seed_partition(G, config, rng)
+        assert set(result.keys()) == set(G.nodes)
+        assert len(set(result.values())) == 4
