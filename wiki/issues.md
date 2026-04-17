@@ -2,7 +2,52 @@
 
 Part of the [project wiki](INDEX.md). See also: [Seeding](seeding.md) · [Methodology](methodology.md) · [Session Log](session-log.md)
 
-**Updated**: 2026-04-17 (session 9) — ISSUE-1 resolved via Fix A (BFS seeder). Ensemble unblocked.
+**Updated**: 2026-04-17 (session 9) — ISSUE-1 resolved. ISSUE-4 newly blocking.
+
+---
+
+## ISSUE-4 (BLOCKING): Chain floods with BipartitionWarning — very high rejection rate
+
+### Symptom
+
+After seeding succeeds, the MCMC chain emits continuous:
+
+```
+BipartitionWarning: Failed to find a balanced cut after 1000 attempts.
+If possible, consider enabling pair reselection within your
+MarkovChain proposal method to allow the algorithm to select
+a different pair of districts for recombination.
+```
+
+The chain runs (PID 61909 at 99% CPU) but no output has been written to `output/runs/` after several minutes. Effectively zero accepted proposals.
+
+### Root cause
+
+Each ReCom step selects two adjacent districts, merges them, builds a random spanning tree, and searches for a balanced cut. With Singapore's ~36% zero-population subzones, merged regions often contain contiguous zero-pop clusters where no balanced spanning-tree cut exists. When GerryChain fails to find a cut, it raises BipartitionWarning and that step is rejected — but the chain is not told to try a different district pair. Almost every step fails this way, making the effective acceptance rate ~0.
+
+### Fix
+
+Add `allow_pair_reselection=True` to the `MarkovChain` constructor in `src/analysis/mcmc/recom.py:111`. This tells GerryChain to resample a different adjacent district pair when bipartition fails, rather than rejecting immediately.
+
+```python
+return MarkovChain(
+    proposal=proposal,
+    constraints=constraints,
+    accept=acceptance,
+    initial_state=initial_partition,
+    total_steps=config.n_steps,
+    allow_pair_reselection=True,   # ← add this
+)
+```
+
+**Verification:** After the fix, BipartitionWarnings should disappear or become rare, and `output/runs/sg2025/` should be written within a few minutes of chain start.
+
+### Action for next session
+
+1. Kill the stuck run: `kill 61909`
+2. Apply the fix to `src/analysis/mcmc/recom.py`
+3. Update tests (tdd-guide agent) — the `build_chain()` test should assert `allow_pair_reselection=True` is passed
+4. Re-run: `python -m src.analysis.cli run-ensemble --run-id sg2025 --n-steps 10000`
 
 ---
 

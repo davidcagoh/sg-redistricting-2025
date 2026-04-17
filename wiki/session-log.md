@@ -22,18 +22,22 @@
   - `make_seed_partition()` now two-phase: `recursive_tree_part` (N attempts) → BFS fallback (10 attempts)
   - 487 tests passing (was 481; added 6 BFS-specific tests; fixed 6 pre-existing CLI test regressions from session 7/8)
 
-- **Ensemble unblocked:** `run-ensemble --run-id sg2025 --n-steps 10000` started successfully; chain is running
+- **Ensemble started** — seeding now succeeds; chain entered MCMC loop
+
+- **New blocker identified (ISSUE-4):** Chain is running but flooded with `BipartitionWarning: Failed to find a balanced cut after 1000 attempts`. GerryChain's recommendation is to enable `allow_pair_reselection` on the MarkovChain so that when a district-pair ReCom step fails, the chain resamples a different pair rather than rejecting. Fix location: `src/analysis/mcmc/recom.py` — add `allow_pair_reselection=True` to `MarkovChain(...)`. See `wiki/issues.md`.
 
 ### State at end of session
 
-Ensemble running in background. `BipartitionWarning` messages are normal (rejected ReCom proposals). Check `/tmp/ensemble_sg2025_v2.log`.
+Ensemble running (PID 61909, `/tmp/ensemble_sg2025_v2.log`) but with very high rejection rate due to BipartitionWarnings. No output written to `output/runs/` yet. Should be killed and restarted after the `allow_pair_reselection` fix.
 
 ### What to do next session
 
-1. Wait for ensemble to complete, check `output/runs/sg2025/`
-2. `python -m src.analysis.cli diff --run-id diff_sg2025 --year-2020-run-id sg2025 --year-2025-run-id sg2025`
-3. Review `output/runs/sg2025/*.png` and `summary_table.csv`
-4. Interpret percentile ranks for HDB town-splitting and population deviation
+1. Kill running ensemble: `kill 61909`
+2. Fix `src/analysis/mcmc/recom.py`: add `allow_pair_reselection=True` to `MarkovChain(...)` call in `build_chain()`
+3. Add/update tests for the fix (tdd-guide agent)
+4. Re-run: `python -m src.analysis.cli run-ensemble --run-id sg2025 --n-steps 10000`
+5. Once complete: `python -m src.analysis.cli diff --run-id diff_sg2025 --year-2020-run-id sg2025 --year-2025-run-id sg2025`
+6. Review output plots and summary table
 
 ---
 

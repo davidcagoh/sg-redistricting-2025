@@ -2,7 +2,7 @@
 
 ## Status (2026-04-17, session 9)
 
-**Ensemble unblocked.** BFS seeder implemented; running `run-ensemble` now.
+**ISSUE-4 blocking.** BFS seeder fixed ISSUE-1. Chain now runs but rejects nearly all proposals due to `BipartitionWarning`. Fix: `allow_pair_reselection=True` in `src/analysis/mcmc/recom.py`.
 
 | Phase | Status |
 |-------|--------|
@@ -12,14 +12,18 @@
 | Phase 3: Metrics | ✅ complete |
 | Phase 4: Ensemble driver | ✅ complete |
 | Phase 5: Diff + Reporting | ✅ complete |
-| **Seeding fix** | ✅ BFS fallback implemented |
-| **Ensemble run** | 🔄 in progress |
+| **Seeding fix (ISSUE-1)** | ✅ BFS fallback — 487 tests green |
+| **Chain rejection fix (ISSUE-4)** | 🔴 needs `allow_pair_reselection=True` in recom.py |
+| **Ensemble run** | 🔴 blocked by ISSUE-4 |
 
-## Next steps
+## Next steps (immediately actionable)
 
-1. `python -m src.analysis.cli run-ensemble --run-id sg2025 --n-steps 10000`
-2. `python -m src.analysis.cli diff --run-id <diff_id> --year-2020-run-id sg2025 --year-2025-run-id sg2025`
-3. Review `output/` — distribution histograms, summary table, percentile ranks
+1. `kill 61909` — stop stuck ensemble
+2. Fix `src/analysis/mcmc/recom.py`: add `allow_pair_reselection=True` to `MarkovChain(...)`
+3. Update tests for the fix (use tdd-guide agent)
+4. Re-run: `python -m src.analysis.cli run-ensemble --run-id sg2025 --n-steps 10000`
+5. Once complete: `python -m src.analysis.cli diff --run-id diff_sg2025 --year-2020-run-id sg2025 --year-2025-run-id sg2025`
+6. Review `output/` plots and summary table for HDB town-splitting and population deviation percentiles
 
 ---
 
@@ -46,7 +50,8 @@
 
 ### Key cross-links
 
-- Seeding failure → root cause in [Issues](issues.md#issue-1) → fix rationale in [Seeding](seeding.md) → literature basis in [Literature](literature/INDEX.md#mattingly-ensembles-and-outliers-2018)
+- Seeding failure (resolved) → [Issues](issues.md#issue-1) → [Seeding](seeding.md) → [Literature](literature/INDEX.md#mattingly-ensembles-and-outliers-2018)
+- Chain rejection (blocking) → [Issues](issues.md#issue-4) → fix in `src/analysis/mcmc/recom.py:111`
 - Why HDB towns? → [Decisions](decisions.md#why-hdb-towns) → [Methodology](methodology.md#metrics)
 - k=33 vs k=31 → [Decisions](decisions.md) → [Open Questions](open-questions.md#grc-multi-member-structure) → [Seeding](seeding.md#fix-b)
 - NC literature → [Literature](literature/INDEX.md#herschlag-quantifying-gerrymandering-in-nc-2018) → [Methodology](methodology.md#what-we-cannot-do-partisan-analysis)
