@@ -4,6 +4,26 @@ Part of the [project wiki](INDEX.md). See also: [Methodology](methodology.md) ·
 
 ---
 
+## 2026-04-17 — filter_for_mcmc excludes all non-mainland components by default
+
+**Decision:** Changed `filter_for_mcmc` default from `min_pop=1` to `min_pop=float("inf")`, so all non-mainland connected components are excluded regardless of population.
+
+**Why:** Node 317 (pop=50, no adjacency edges) caused BFS seeding to fail with non-contiguous districts. It is a single isolated subzone with no graph neighbours, meaning no spanning-tree cut can include it in any contiguous district. Its population (50 of 4,044,340 total = 0.001%) is negligible. The old `min_pop=1` threshold was an approximation that accidentally allowed isolated populated nodes through. The MCMC framework requires the graph to be connected; any non-mainland component is incompatible with contiguity requirements.
+
+**Implication:** The MCMC graph now has 327 nodes (was 328). Callers wanting to retain non-mainland populated components (e.g. for non-MCMC analysis) must pass `min_pop` explicitly.
+
+---
+
+## 2026-04-17 — allow_pair_reselection via bipartition_tree partial, not MarkovChain
+
+**Decision:** ISSUE-4 fix passes `functools.partial(bipartition_tree, allow_pair_reselection=True, max_attempts=1000)` as `method` kwarg to `recom`, rather than setting `allow_pair_reselection` on `MarkovChain` (which doesn't expose this parameter in GerryChain 0.3.2).
+
+**Why:** The GerryChain 0.3.2 `MarkovChain.__init__` does not accept `allow_pair_reselection`. The flag lives on `bipartition_tree`. Setting `max_attempts=1000` (equal to `warn_attempts`) is critical: without it, each failing district pair exhausts 100 000 spanning-tree attempts before triggering reselection, yielding ~20 s/step. With `max_attempts=1000`, failing pairs give up immediately and trigger reselection, yielding ~0.15 s/step (130× speedup).
+
+**Implication:** If GerryChain is upgraded to a version that exposes `allow_pair_reselection` on `MarkovChain`, the `recom.py` approach should be revisited — but the current approach is functionally correct for 0.3.2.
+
+---
+
 ## 2026-04-17 — BFS seeder chosen over actual-plan seed
 
 **Decision:** Use a custom BFS growth seeder (Fix A) as fallback when `recursive_tree_part` fails, rather than using the 2020 actual plan as seed (Fix B).

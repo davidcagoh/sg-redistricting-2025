@@ -126,13 +126,22 @@ def identify_islands(graph: nx.Graph) -> list[list[Any]]:
 def filter_for_mcmc(
     graph: nx.Graph,
     *,
-    min_pop: int = 1,
+    min_pop: float = float("inf"),
 ) -> tuple[nx.Graph, list[Any]]:
-    """Remove zero-population isolated subzones from the graph.
+    """Remove non-mainland components from the graph.
 
-    A subzone is excluded when:
+    A component is excluded when:
     1. It belongs to a non-mainland component (per identify_islands), AND
     2. The total pop_total across its component is < min_pop.
+
+    With the default min_pop=inf, ALL non-mainland components are excluded
+    regardless of population.  This is required for MCMC: GerryChain's ReCom
+    cannot form contiguous districts from isolated sub-graphs, so any non-mainland
+    node (even one with non-zero population, e.g. Singapore node 317) must be
+    removed before seeding.
+
+    Pass an explicit min_pop value to preserve high-population non-mainland
+    components (e.g. min_pop=1 keeps components with any residents).
 
     The input graph is never mutated.
 
@@ -142,6 +151,7 @@ def filter_for_mcmc(
         Undirected NetworkX graph produced by build_subzone_graph.
     min_pop:
         Population threshold below which a non-mainland component is removed.
+        Default is ``float("inf")``, which removes all non-mainland components.
 
     Returns
     -------

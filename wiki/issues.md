@@ -2,11 +2,21 @@
 
 Part of the [project wiki](INDEX.md). See also: [Seeding](seeding.md) · [Methodology](methodology.md) · [Session Log](session-log.md)
 
-**Updated**: 2026-04-17 (session 9) — ISSUE-1 resolved. ISSUE-4 newly blocking.
+**Updated**: 2026-04-17 (session 10) — ISSUE-4 and ISSUE-5 resolved. Ensemble running.
 
 ---
 
-## ISSUE-4 (BLOCKING): Chain floods with BipartitionWarning — very high rejection rate
+## ISSUE-5 (RESOLVED — session 10): BFS seeder fails with non-contiguous district on real graph
+
+**Root cause:** Node 317 (pop=50, no adjacency edges — an isolated subzone) was kept by `filter_for_mcmc` because its population exceeded the old default `min_pop=1`. The BFS seeder's remainder-assignment step assigned it to the smallest-pop district (district 0) without a contiguity check, making district 0 non-contiguous.
+
+**Fix:** Changed `filter_for_mcmc` default from `min_pop=1` to `min_pop=float("inf")` in `src/analysis/graph_build.py`. All non-mainland components are now excluded by default. Node 317's 50 residents (0.001% of total) are negligible.
+
+---
+
+## ISSUE-4 (RESOLVED — session 10): Chain floods with BipartitionWarning — very high rejection rate
+
+**Fix:** `src/analysis/mcmc/recom.py` — `build_chain()` now passes `method=functools.partial(bipartition_tree, allow_pair_reselection=True, max_attempts=1000)` to the `recom` proposal. `allow_pair_reselection` is on `bipartition_tree`, not on `MarkovChain`, in GerryChain 0.3.2. `max_attempts=1000` is critical for speed: without it each failing pair tries 100 000 spanning trees (~20 s/step); with it each pair gives up after 1 000 attempts and reselects (~0.15 s/step).
 
 ### Symptom
 

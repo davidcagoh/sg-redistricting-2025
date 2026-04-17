@@ -18,6 +18,7 @@ import networkx as nx
 from gerrychain import Graph as GCGraph
 from gerrychain import MarkovChain, Partition
 from gerrychain.proposals import recom
+from gerrychain.tree import bipartition_tree
 from gerrychain.updaters import Tally
 
 from src.analysis.config import EnsembleConfig
@@ -100,12 +101,22 @@ def build_chain(
     total_pop = sum(initial_partition[_POP_UPDATER_KEY].values())
     pop_target = total_pop / config.k_districts
 
+    # allow_pair_reselection=True is required for Singapore's graph: ~36% of
+    # subzones are zero-population (parks, reservoirs, industrial zones), which
+    # causes bipartition_tree to fail almost every step without this flag.
+    bipartition_with_reselection = functools.partial(
+        bipartition_tree,
+        allow_pair_reselection=True,
+        max_attempts=1000,  # fail fast per pair; ReselectException triggers new pair
+    )
+
     proposal = functools.partial(
         recom,
         pop_col="pop_total",
         pop_target=pop_target,
         epsilon=config.recom_epsilon,
         node_repeats=config.recom_node_repeats,
+        method=bipartition_with_reselection,
     )
 
     return MarkovChain(

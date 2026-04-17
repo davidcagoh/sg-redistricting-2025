@@ -338,7 +338,17 @@ class TestFilterForMcmc:
         assert 99 in excluded
         assert 99 not in filtered.nodes
 
-    def test_keeps_populated_islands(self, grid_3x3: gpd.GeoDataFrame) -> None:
+    def test_default_excludes_all_non_mainland_components(
+        self, grid_3x3: gpd.GeoDataFrame
+    ) -> None:
+        """By default, ALL non-mainland components are excluded regardless of population.
+
+        Isolated non-mainland nodes (even with pop > 0) cannot form contiguous
+        districts in GerryChain's ReCom framework, so they must be excluded from the
+        MCMC graph.  This test guards against a regression where a populated isolated
+        node (e.g. the real Singapore node 317, pop=50) slips through and breaks
+        seeding.
+        """
         G = build_subzone_graph(grid_3x3)
         G.add_node(
             99,
@@ -349,6 +359,24 @@ class TestFilterForMcmc:
             _feature_id=99,
         )
         filtered, excluded = filter_for_mcmc(G)
+        assert 99 in excluded
+        assert 99 not in filtered.nodes
+
+    def test_explicit_min_pop_can_keep_populated_islands(
+        self, grid_3x3: gpd.GeoDataFrame
+    ) -> None:
+        """Passing an explicit min_pop=1 keeps islands with pop >= 1."""
+        G = build_subzone_graph(grid_3x3)
+        G.add_node(
+            99,
+            subzone_name_norm="POP_ISLAND",
+            pop_total=500,
+            pln_area="X",
+            area_m2=1e6,
+            _feature_id=99,
+        )
+        # min_pop=1: pop=500 island kept because 500 >= 1
+        filtered, excluded = filter_for_mcmc(G, min_pop=1)
         assert 99 not in excluded
         assert 99 in filtered.nodes
 

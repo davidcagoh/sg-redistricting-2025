@@ -29,3 +29,6 @@ Part of the [project wiki](INDEX.md). See also: [Decisions](decisions.md) · [Me
 
 1. **What is the primary analysis goal?** — Resolved 2026-04-12.  
    Primary: community-of-interest splitting (HDB towns as communities, counting cross-boundary splits in ensemble vs. actual plan). Secondary: population deviation outlier test. Partisan seat analysis is not feasible due to absence of public precinct-level vote returns. See `decisions.md`.
+
+2. **Why does BFS seeding produce non-contiguous districts on the real graph?** — Resolved 2026-04-17.  
+   Node 317 is an isolated subzone (pop=50, no adjacency edges). The old `filter_for_mcmc(min_pop=1)` default kept it, and the BFS remainder-assignment loop assigned it to a non-adjacent district. Fixed by changing `filter_for_mcmc` default to `min_pop=float("inf")`. See `decisions.md`.

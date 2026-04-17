@@ -1,5 +1,35 @@
 # Session Log
 
+## 2026-04-17 (session 10) — ISSUE-4 fix + ISSUE-5 fix; ensemble now running
+
+### What was done
+
+- **Diagnosed why `allow_pair_reselection` was not on `MarkovChain.__init__`:** In GerryChain 0.3.2 the flag lives on `bipartition_tree`, not on `MarkovChain`. The fix required passing `functools.partial(bipartition_tree, allow_pair_reselection=True, max_attempts=1000)` as the `method` kwarg to `recom`.
+
+- **Fixed ISSUE-4 (chain freezes with BipartitionWarning):** `src/analysis/mcmc/recom.py` — `build_chain()` now passes a `bipartition_with_reselection` partial as `method`. `max_attempts=1000` makes failing pairs give up quickly and trigger reselection, yielding a **130× speedup** (19.6 s/step → 0.15 s/step). Tests added/updated in `tests/test_mcmc_recom.py` (TDD: RED → GREEN). Code-reviewer agent approved.
+
+- **Discovered and fixed ISSUE-5 (disconnected graph; node 317 breaks BFS seeder):** After fixing ISSUE-4, the BFS seeder still failed with `SeedPartitionError: District 0 is not contiguous. Nodes in district: [13, 16, 86, 317]`. Investigation found that `filter_for_mcmc` was keeping node 317 (pop=50, no edges — a truly isolated subzone) because its population exceeded the old default `min_pop=1`. Changed default to `min_pop=float("inf")` so **all non-mainland components are excluded by default**, regardless of population. An isolated node cannot participate in any contiguous district, so exclusion is always correct for MCMC. Node 317 represents 0.001% of total population — negligible. Tests updated in `tests/test_graph_build.py` (2 new tests, 1 renamed).
+
+- **489 tests passing** (was 488 at start of session; +1 from recom, +2 from graph_build, -1 old test renamed/updated).
+
+- **Full 10 000-step ensemble launched** (PID 65626, `data/processed/ensemble/sg2025.tmp`). At ~0.15 s/step the chain should complete in ~25 minutes; seeding (once) adds ~20 s.
+
+- **Deleted `wiki/next-agent-prompt.md`** — superseded by session log.
+
+### State at end of session
+
+Ensemble running. `data/processed/ensemble/sg2025.tmp` will rename to `sg2025/` on completion. No diff output yet.
+
+### What to do next session
+
+1. Confirm ensemble completed: `ls data/processed/ensemble/sg2025/`
+2. Assign actual plans (if not already done): `python -m src.analysis.cli assign-actual --year 2020` and `--year 2025`
+3. Run diff: `python -m src.analysis.cli diff --run-id diff_sg2025 --year-2020-run-id sg2025 --year-2025-run-id sg2025`
+4. Review `data/processed/ensemble/sg2025/metrics.parquet` histograms and `diff_report.json` percentiles — focus on `towns_split`, `max_abs_pop_dev`, `mean_pp`
+5. Interpret whether the 2020/2025 plans are statistical outliers; update `wiki/methodology.md` with findings
+
+---
+
 ## 2026-04-17 (session 9) — Wiki knowledge graph refactor + BFS seeder (Fix A) + ensemble unblocked
 
 ### What was done

@@ -206,3 +206,32 @@ class TestBuildChain:
     def test_chain_initial_state_is_partition(self, chain) -> None:
         """chain.state must be the initial Partition."""
         assert isinstance(chain.state, Partition)
+
+    def test_proposal_uses_allow_pair_reselection(
+        self,
+        initial_partition: Partition,
+        two_district_config: EnsembleConfig,
+    ) -> None:
+        """The ReCom proposal must pass allow_pair_reselection=True to bipartition_tree.
+
+        This prevents the chain from freezing on Singapore's ~36% zero-population
+        subzones, which otherwise cause every bipartition attempt to fail.
+        """
+        import functools
+
+        constraint = within_percent_of_ideal_population(
+            initial_partition, two_district_config.pop_tolerance
+        )
+        acceptance = gerrychain.accept.always_accept
+        chain = build_chain(
+            initial_partition,
+            two_district_config,
+            [constraint],
+            acceptance,
+        )
+        method = chain.proposal.keywords.get("method")
+        assert method is not None, "proposal must supply a 'method' kwarg"
+        assert isinstance(method, functools.partial), "method must be a functools.partial"
+        assert method.keywords.get("allow_pair_reselection") is True
+        # max_attempts must be low so failing pairs give up quickly and reselect
+        assert method.keywords.get("max_attempts", 100_000) <= 1_000

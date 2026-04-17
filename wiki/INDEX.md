@@ -1,29 +1,30 @@
 # Project Wiki — Singapore Electoral Redistricting Analysis
 
-## Status (2026-04-17, session 9)
+## Status (2026-04-17, session 10)
 
-**ISSUE-4 blocking.** BFS seeder fixed ISSUE-1. Chain now runs but rejects nearly all proposals due to `BipartitionWarning`. Fix: `allow_pair_reselection=True` in `src/analysis/mcmc/recom.py`.
+**Ensemble running.** Both ISSUE-4 (BipartitionWarning) and ISSUE-5 (isolated node 317) are fixed. 489 tests green. Chain at ~0.15 s/step; `data/processed/ensemble/sg2025/` writes on completion.
 
 | Phase | Status |
 |-------|--------|
 | Phase 0: Foundations | ✅ complete |
-| Phase 1: Graph | ✅ complete (332 nodes, 850 edges, 4 islands excluded) |
+| Phase 1: Graph | ✅ complete (332 nodes → 327 after filtering; 4 zero-pop islands + node 317 excluded) |
 | Phase 2: MCMC skeleton | ✅ complete |
 | Phase 3: Metrics | ✅ complete |
 | Phase 4: Ensemble driver | ✅ complete |
 | Phase 5: Diff + Reporting | ✅ complete |
-| **Seeding fix (ISSUE-1)** | ✅ BFS fallback — 487 tests green |
-| **Chain rejection fix (ISSUE-4)** | 🔴 needs `allow_pair_reselection=True` in recom.py |
-| **Ensemble run** | 🔴 blocked by ISSUE-4 |
+| **Seeding fix (ISSUE-1)** | ✅ BFS fallback — 489 tests green |
+| **Chain rejection fix (ISSUE-4)** | ✅ `allow_pair_reselection=True` + `max_attempts=1000` in recom.py |
+| **Isolated node fix (ISSUE-5)** | ✅ `filter_for_mcmc` default `min_pop=float("inf")` |
+| **Ensemble run (sg2025, 10 000 steps)** | 🟡 in progress (PID 65626) |
+| **Diff + reporting** | 🔴 waiting on ensemble |
 
 ## Next steps (immediately actionable)
 
-1. `kill 61909` — stop stuck ensemble
-2. Fix `src/analysis/mcmc/recom.py`: add `allow_pair_reselection=True` to `MarkovChain(...)`
-3. Update tests for the fix (use tdd-guide agent)
-4. Re-run: `python -m src.analysis.cli run-ensemble --run-id sg2025 --n-steps 10000`
-5. Once complete: `python -m src.analysis.cli diff --run-id diff_sg2025 --year-2020-run-id sg2025 --year-2025-run-id sg2025`
-6. Review `output/` plots and summary table for HDB town-splitting and population deviation percentiles
+1. Confirm ensemble completed: `ls data/processed/ensemble/sg2025/`
+2. Assign actual plans: `python -m src.analysis.cli assign-actual --year 2020` and `--year 2025`
+3. Run diff: `python -m src.analysis.cli diff --run-id diff_sg2025 --year-2020-run-id sg2025 --year-2025-run-id sg2025`
+4. Review `data/processed/ensemble/sg2025/` — `metrics.parquet`, `diff_report.json`, `*.png`
+5. Focus metrics: `towns_split`, `max_abs_pop_dev`, `mean_pp` — are 2020/2025 plans outliers?
 
 ---
 
