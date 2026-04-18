@@ -145,6 +145,9 @@ class TestRunEnsemble:
 # ---------------------------------------------------------------------------
 
 
+_SAMPLE_METRICS = {"max_abs_pop_dev": 0.05, "towns_split": 3.0, "pln_area_splits": 2.0, "mean_pp": 0.4}
+
+
 class TestAssignActual:
     def _patch_and_run(self, *args: str) -> MagicMock:
         """Run assign-actual with mocked assign_actual_plan and file I/O."""
@@ -153,9 +156,11 @@ class TestAssignActual:
         with (
             patch("src.analysis.cli.assign_actual_plan", mock_assign),
             patch("src.analysis.cli._load_graph_for_actual",
-                  return_value=(MagicMock(), MagicMock())),
+                  return_value=(MagicMock(), MagicMock(), MagicMock())),
             patch("src.analysis.cli.load_electoral_boundaries", return_value=MagicMock()),
             patch("src.analysis.cli._save_actual_assignment"),
+            patch("src.analysis.cli.compute_actual_plan_metrics", return_value=_SAMPLE_METRICS),
+            patch("pathlib.Path.write_text"),
         ):
             _run_main(*args)
 
@@ -185,9 +190,11 @@ class TestAssignActual:
         with (
             patch("src.analysis.cli.assign_actual_plan", return_value={0: "ED"}),
             patch("src.analysis.cli._load_graph_for_actual",
-                  return_value=(MagicMock(), MagicMock())),
+                  return_value=(MagicMock(), MagicMock(), MagicMock())),
             patch("src.analysis.cli.load_electoral_boundaries", return_value=MagicMock()),
             patch("src.analysis.cli._save_actual_assignment", mock_save),
+            patch("src.analysis.cli.compute_actual_plan_metrics", return_value=_SAMPLE_METRICS),
+            patch("pathlib.Path.write_text"),
         ):
             _run_main("assign-actual", "--year", "2020")
 
@@ -199,9 +206,11 @@ class TestAssignActual:
         with (
             patch("src.analysis.cli.assign_actual_plan", return_value={0: "ED"}),
             patch("src.analysis.cli._load_graph_for_actual",
-                  return_value=(MagicMock(), MagicMock())),
+                  return_value=(MagicMock(), MagicMock(), MagicMock())),
             patch("src.analysis.cli.load_electoral_boundaries", return_value=MagicMock()),
             patch("src.analysis.cli._save_actual_assignment", mock_save),
+            patch("src.analysis.cli.compute_actual_plan_metrics", return_value=_SAMPLE_METRICS),
+            patch("pathlib.Path.write_text"),
         ):
             _run_main("assign-actual", "--year", "2020")
 
@@ -214,9 +223,11 @@ class TestAssignActual:
         with (
             patch("src.analysis.cli.assign_actual_plan", return_value={0: "ED"}),
             patch("src.analysis.cli._load_graph_for_actual",
-                  return_value=(MagicMock(), MagicMock())),
+                  return_value=(MagicMock(), MagicMock(), MagicMock())),
             patch("src.analysis.cli.load_electoral_boundaries", return_value=MagicMock()),
             patch("src.analysis.cli._save_actual_assignment", mock_save),
+            patch("src.analysis.cli.compute_actual_plan_metrics", return_value=_SAMPLE_METRICS),
+            patch("pathlib.Path.write_text"),
         ):
             _run_main("assign-actual", "--year", "2025")
 
@@ -233,8 +244,10 @@ class TestDiff:
     def _patch_and_run(self, *args: str) -> dict[str, MagicMock]:
         import pandas as pd
 
+        _sample = {"max_abs_pop_dev": 0.05, "towns_split": 3.0, "pln_area_splits": 2.0, "mean_pp": 0.4}
         mock_load_metrics = MagicMock(return_value=pd.DataFrame({"run_id": ["r1"], "step_index": [0]}))
-        mock_load_actual = MagicMock(return_value=pd.DataFrame({"run_id": ["r-2020"]}))
+        mock_load_actual = MagicMock(return_value=pd.DataFrame({"node_id": [1], "ed_name": ["A"]}))
+        mock_load_actual_metrics = MagicMock(return_value=_sample)
         mock_build_diff = MagicMock(return_value=[{"plan_year": 2020}])
         mock_save_diff = MagicMock(return_value=Path("/tmp/diff_report.json"))
         mock_save_plots = MagicMock(return_value=[Path("/tmp/plot.png")])
@@ -242,6 +255,7 @@ class TestDiff:
         with (
             patch("src.analysis.cli.load_ensemble_metrics", mock_load_metrics),
             patch("src.analysis.cli.load_actual_assignments", mock_load_actual),
+            patch("src.analysis.cli.load_actual_metrics", mock_load_actual_metrics),
             patch("src.analysis.cli.build_diff_report", mock_build_diff),
             patch("src.analysis.cli.save_diff_report", mock_save_diff),
             patch("src.analysis.cli.save_all_plots", mock_save_plots),
@@ -251,6 +265,7 @@ class TestDiff:
         return {
             "load_metrics": mock_load_metrics,
             "load_actual": mock_load_actual,
+            "load_actual_metrics": mock_load_actual_metrics,
             "build_diff": mock_build_diff,
             "save_diff": mock_save_diff,
             "save_plots": mock_save_plots,
@@ -329,12 +344,14 @@ class TestDiff:
     def test_diff_prints_saved_paths(self, capsys: pytest.CaptureFixture) -> None:
         import pandas as pd
 
+        _sample = {"max_abs_pop_dev": 0.05, "towns_split": 3.0, "pln_area_splits": 2.0, "mean_pp": 0.4}
         mock_report_path = Path("/tmp/diff_report.json")
         mock_plot_paths = [Path("/tmp/max_abs_pop_dev.png")]
 
         with (
             patch("src.analysis.cli.load_ensemble_metrics", return_value=pd.DataFrame()),
-            patch("src.analysis.cli.load_actual_assignments", return_value=pd.DataFrame({"run_id": ["r"]})),
+            patch("src.analysis.cli.load_actual_assignments", return_value=pd.DataFrame({"node_id": [1], "ed_name": ["A"]})),
+            patch("src.analysis.cli.load_actual_metrics", return_value=_sample),
             patch("src.analysis.cli.build_diff_report", return_value=[]),
             patch("src.analysis.cli.save_diff_report", return_value=mock_report_path),
             patch("src.analysis.cli.save_all_plots", return_value=mock_plot_paths),
@@ -351,15 +368,17 @@ class TestDiff:
     def test_diff_passes_year_2020_run_id_to_load_actual(self) -> None:
         import pandas as pd
 
+        _sample = {"max_abs_pop_dev": 0.05, "towns_split": 3.0, "pln_area_splits": 2.0, "mean_pp": 0.4}
         captured_calls: list = []
 
         def fake_load_actual(year: int, paths):
             captured_calls.append(year)
-            return pd.DataFrame({"run_id": [f"run-{year}"]})
+            return pd.DataFrame({"node_id": [1], "ed_name": ["A"]})
 
         with (
             patch("src.analysis.cli.load_ensemble_metrics", return_value=pd.DataFrame()),
             patch("src.analysis.cli.load_actual_assignments", side_effect=fake_load_actual),
+            patch("src.analysis.cli.load_actual_metrics", return_value=_sample),
             patch("src.analysis.cli.build_diff_report", return_value=[]),
             patch("src.analysis.cli.save_diff_report", return_value=Path("/tmp/r.json")),
             patch("src.analysis.cli.save_all_plots", return_value=[]),

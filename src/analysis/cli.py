@@ -16,6 +16,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
+import json
+
 import geopandas as gpd
 import networkx as nx
 import pandas as pd
@@ -25,7 +27,9 @@ from src.analysis.config import EnsembleConfig, PathsConfig
 from src.analysis.io_layer import load_electoral_boundaries
 from src.analysis.diff_2020_2025 import (
     build_diff_report,
+    compute_actual_plan_metrics,
     load_actual_assignments,
+    load_actual_metrics,
     load_ensemble_metrics,
     save_diff_report,
 )
@@ -41,12 +45,13 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
-def _load_graph_for_actual(paths: PathsConfig) -> tuple[nx.Graph, gpd.GeoDataFrame]:
-    """Load the subzone graph and filtered GDF used for actual plan assignment."""
+def _load_graph_for_actual(
+    paths: PathsConfig,
+) -> tuple[nx.Graph, gpd.GeoDataFrame, dict]:
+    """Load the subzone graph, filtered GDF, and geometry lookup."""
     from src.analysis.ensemble import build_pipeline_inputs
 
-    graph, filtered_gdf, _geoms = build_pipeline_inputs(paths)
-    return graph, filtered_gdf
+    return build_pipeline_inputs(paths)
 
 
 def _save_actual_assignment(assignment: dict[int, str | None], out_path: Path) -> None:
@@ -88,12 +93,17 @@ def _cmd_assign_actual(args: argparse.Namespace) -> None:
     year: int = args.year
     paths = _make_paths_config()
 
-    graph, filtered_gdf = _load_graph_for_actual(paths)
+    graph, filtered_gdf, subzone_geoms = _load_graph_for_actual(paths)
     electoral = load_electoral_boundaries(year)
     assignment = assign_actual_plan(year, graph, filtered_gdf, electoral)
 
     out_path = OUTPUT / "actual_assignments" / f"{year}.parquet"
     _save_actual_assignment(assignment, out_path)
+
+    metrics = compute_actual_plan_metrics(assignment, graph, subzone_geoms)
+    metrics_path = out_path.with_name(f"{year}_metrics.json")
+    metrics_path.write_text(json.dumps(metrics, indent=2) + "\n")
+
     print(str(out_path))
 
 
@@ -102,10 +112,12 @@ def _cmd_diff(args: argparse.Namespace) -> None:
     paths = _make_paths_config()
 
     ensemble_metrics = load_ensemble_metrics(args.run_id, paths)
-    assignments_2020 = load_actual_assignments(2020, paths)
-    assignments_2025 = load_actual_assignments(2025, paths)
+    load_actual_assignments(2020, paths)
+    load_actual_assignments(2025, paths)
+    actual_metrics_2020 = load_actual_metrics(2020, paths)
+    actual_metrics_2025 = load_actual_metrics(2025, paths)
 
-    report = build_diff_report(assignments_2020, assignments_2025, ensemble_metrics)
+    report = build_diff_report(actual_metrics_2020, actual_metrics_2025, ensemble_metrics)
 
     diff_out_dir = OUTPUT / "diff" / args.run_id
     report_path = save_diff_report(report, diff_out_dir)

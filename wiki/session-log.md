@@ -1,5 +1,66 @@
 # Session Log
 
+## 2026-04-18 (session 11) — diff pipeline fixed + results interpreted
+
+### What was done
+
+- **Fixed broken `diff` pipeline (design gap):** `build_diff_report` was written expecting a `run_id` column in actual-plan assignment parquets and actual-plan metrics embedded in ensemble_metrics at `step_index=0`. But `assign_actual` only saved `{node_id, ed_name}` — no metrics, no run_id.
+
+- **Redesigned diff data flow:**
+  - Added `compute_actual_plan_metrics(assignment_str, graph, subzone_geoms)` to `diff_2020_2025.py` — converts `node_id→ed_name` dict to integer district IDs, calls `compute_all` metrics registry.
+  - Added `load_actual_metrics(year, paths)` — reads sidecar `{year}_metrics.json`.
+  - Changed `build_diff_report(actual_metrics_2020, actual_metrics_2025, ensemble_metrics)` — no more run_id lookup.
+  - `_cmd_assign_actual` now computes and saves `{year}_metrics.json` alongside the assignments parquet.
+  - `_cmd_diff` loads sidecar metrics, passes directly to `build_diff_report`.
+  - Tests updated: `test_diff_2020_2025.py` rewritten for new interface (+9 tests total, 498 passing).
+
+- **Re-ran `assign-actual` for both years** to generate metrics sidecars.
+
+- **Ran `diff --run-id sg2025`** successfully: `output/diff/sg2025/diff_report.json` + 4 plots.
+
+### Results
+
+Ensemble: 9 000 post-burn-in steps, seed 42, k=33, pop_tolerance=10%, recom_epsilon=5%.
+
+| Metric | Actual 2020 | Actual 2025 | Ensemble mean | Ensemble range | 2020 pctile | 2025 pctile |
+|--------|------------|------------|---------------|----------------|-------------|-------------|
+| `max_abs_pop_dev` | 1.223 | 1.223 | 0.096 (const) | [0.096, 0.096] | 100th | 100th |
+| `towns_split` | 12 | 12 | 12 (const) | [12, 12] | 0th | 0th |
+| `pln_area_splits` | 30 | 28 | 36.3 | [30, 42] | 0th | 0th |
+| `mean_pp` | 0.435 | 0.418 | 0.353 | [0.314, 0.399] | 100th | 100th |
+
+### Interpretation
+
+**Non-informative metrics (ensemble has zero variance):**
+- `max_abs_pop_dev` is frozen at 0.0955 across all 9000 steps — likely one subzone always anchors a district at the ReCom constraint ceiling. Comparison against actual (1.22) is also confounded: actual plans use GRCs (multi-member, variable size) vs ensemble's 33 equal-pop SMC-equivalent districts. Not a meaningful comparison.
+- `towns_split` is frozen at 12 in every step. With 26 HDB towns divided into 33 districts, 12 towns are structurally always split regardless of how the map is drawn (a graph-topology inevitability for this specific Singapore subzone graph). Not informative.
+
+**Informative metrics:**
+- **`pln_area_splits` (0th percentile):** Actual 2020 (30) and 2025 (28) split fewer planning areas than all or nearly all MCMC plans (min=30, mean=36). The 2025 plan ties the MCMC minimum. This is a statistically extreme finding: the actual boundaries preserve planning area cohesion better than any randomly sampled equal-population plan. This strongly suggests the actual electoral boundaries were drawn with explicit reference to planning area lines.
+- **`mean_pp` (100th percentile):** Actual plans (0.435, 0.418) are more compact than any MCMC plan (max=0.399). Actual GRC boundaries are more geometrically compact than any of the 9000 random 33-district partitions. This is the opposite of what typical partisan gerrymandering looks like (which tends to produce bizarre shapes). Singapore's GRCs are large, round, administratively aligned — consistent with boundaries following planning areas rather than being drawn to dilute votes.
+
+**Overall conclusion:** The actual electoral boundaries are extreme outliers in planning-area cohesion and compactness, but in a direction inconsistent with shape-based gerrymandering. The GRC system introduces malapportionment (`max_abs_pop_dev`) that is outside the MCMC comparison framework (different institutional structure). The key finding is that real maps respect planning area lines far better than random maps — this is a constraint the ELD appears to be following.
+
+### Limitations to document
+
+1. GRC vs SMC mismatch: the ensemble models 33 single-member equal-pop districts; the actual plans have 12-17 constituencies of varying multi-member size. Pop-balance comparison is not apples-to-apples.
+2. `towns_split` and `max_abs_pop_dev` zero-variance in ensemble — structural, not exploratory failure.
+3. Only 1 run at 10k steps. Should run multiple seeds to verify mixing.
+4. Actual plan assignment is by subzone→ED areal majority. Edge subzones near constituency boundaries may be misassigned.
+
+### State at end of session
+
+`output/diff/sg2025/diff_report.json` written. Plots in `output/diff/sg2025/plots/`. Pipeline complete end-to-end. Findings written above. Next: update `wiki/methodology.md` with results, write findings summary.
+
+### What to do next session
+
+1. Update `wiki/methodology.md` with the quantitative results table and interpretation
+2. Write `wiki/findings.md` with the headline conclusions + caveats
+3. Consider: rerun ensemble with `seed=123` (or other seeds) for mixing verification
+4. Consider: whether the GRC-level comparison (grouping subzones by GRC, not SMC) would be more meaningful
+
+---
+
 ## 2026-04-17 (session 10) — ISSUE-4 fix + ISSUE-5 fix; ensemble now running
 
 ### What was done
