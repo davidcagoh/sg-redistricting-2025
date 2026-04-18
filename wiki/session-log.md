@@ -1,5 +1,63 @@
 # Session Log
 
+## 2026-04-18 (session 12) — electoral profile analysis + findings written
+
+### What was done
+
+- **Fetched ELD vote results from data.gov.sg** (`d_581a30bee57fa7d8383d6bc94739ad00`): 1,609 records, 1955–2025. Fields: year, constituency, constituency_type, candidates, party, vote_count, vote_percentage. Saved to `data/raw/eld_results_raw.json`.
+
+- **Built `src/analysis/electoral_profile.py`** (~680 lines):
+  - `load_eld_results(year)`: infers seat count from candidates field (count `|` separators + 1); handles walkovers via `_WALKOVERS` dict (Marine Parade-Braddell Heights GRC, 5 seats, 2025 — not in ELD data)
+  - `load_subzone_demographics()`: merges GeoJSON + master_population_subzone.csv on normalized subzone name
+  - `aggregate_demographics_by_constituency(assignments, subzone_demo)`: sums per constituency, derives pct_chinese/malay/indian/minority, pct_hdb/small_hdb/4room_hdb/large_hdb/private
+  - `malapportionment_analysis(df, year)`: seat–vote gap, efficiency gap, votes-per-seat-won (won constituencies only)
+  - `correlation_analysis(df)`: Pearson r of opp_pct vs demographic variables
+  - `size_vs_politics(df)`: mean stats by political_category
+  - `boundary_changes(df20, df25)`: 114 subzones changed between 2020 and 2025
+  - `grc_minority_analysis(df, year)`: t-test GRC vs SMC minority %, within-GRC correlations
+  - Generates plots: `opp_vs_size_{year}.png`, `demo_corr_{year}.png`, `malapportionment_bins.png`, `boundary_changes.png`
+
+- **Outputs generated** in `output/electoral_profile/`:
+  - `constituencies_2020.csv`, `constituencies_2025.csv`
+  - `malapportionment.csv`, `correlations_2020.csv`, `correlations_2025.csv`
+  - `size_vs_politics_2020.csv`, `size_vs_politics_2025.csv`
+  - `boundary_changes.csv` (114 changed subzones, sorted by population)
+  - `findings_summary.json`
+  - 4 plots in `plots/`
+
+- **Wrote `wiki/findings.md`** — comprehensive synthesis of all quantitative findings.
+
+### Key quantitative results
+
+**Malapportionment:**
+- 2020: PAP 89.25% seats from 61.23% votes → seat–vote gap +28.0 pp; efficiency gap 16.2%
+- 2025: PAP 89.69% seats from 65.57% votes → seat–vote gap +24.1 pp; efficiency gap 7.3%
+- Votes-per-seat-won: PAP 16,928 vs opposition 16,148 (ratio 0.954) — nearly equal per-seat efficiency; distortion is structural (GRC amplification), not differential constituency sizing
+
+**Demographic correlations (2020, n=31):**
+- % 4-room HDB: r=+0.483, p=0.006 (significant) — middle-class areas more opposition
+- % small HDB (≤3-room): r=−0.366, p=0.043 (significant) — working-class areas more PAP
+- All ethnic variables: insignificant
+- 2025: all correlations insignificant (class signal vanished)
+
+**GRC minority analysis:**
+- GRC mean minority %: 22.4% (2020), 22.7% (2025)
+- SMC mean minority %: 20.5% (2020), 18.9% (2025)
+- t-test p=0.44 (2020), p=0.12 (2025) — no significant difference
+- Minority % does not predict GRC placement, GRC size, or opposition vote share
+
+**Notable boundary changes:**
+- FERNVALE (58,800): Ang Mo Kio stronghold → Jalan Kayu marginal (WP got 48.5%)
+- ALJUNIED + MACPHERSON + Marine Parade belt (~160,000 people): merged into Marine Parade-Braddell Heights walkover
+- BUKIT BATOK CENTRAL: marginal Bukit Batok SMC → Jurong East-Bukit Batok stronghold (76.7%)
+- 114 total subzones changed constituency; marginal/competitive seats restructured disproportionately
+
+### State at end of session
+
+All analysis complete. `wiki/findings.md` written. Pipeline fully documented. 498 tests passing.
+
+---
+
 ## 2026-04-18 (session 11) — diff pipeline fixed + results interpreted
 
 ### What was done
