@@ -1,8 +1,8 @@
 # Project Wiki — Singapore Electoral Redistricting Analysis
 
-## Status (2026-04-18, session 14)
+## Status (2026-04-19, session 15)
 
-**Paper 1 draft complete.** Analysis is finished. `writeup/paper1/draft.md` is a full 4,581-word draft ready for review and publication prep.
+**Paper 1 compiled to PDF.** `writeup/paper1/paper.tex` is a clean LaTeX build (16 pages). Repo root reorganised. Ready for dissemination prep.
 
 | Phase | Status |
 |-------|--------|
@@ -15,14 +15,15 @@
 | **Electoral profile analysis** | ✅ complete — findings.md |
 | **Boundary permutation test** | ✅ complete — p=0.012 |
 | **Paper 1 draft** | ✅ complete — writeup/paper1/draft.md |
-| **Publication prep** | 🔴 not started — needs platform, figures embedded, URL |
+| **Paper 1 LaTeX / PDF** | ✅ complete — writeup/paper1/paper.pdf |
+| **Publication prep** | 🔴 not started — needs platform + pitch summary |
 
 ## Next steps (immediately actionable)
 
-1. Review `writeup/paper1/draft.md` — tighten language, verify figure captions vs actual PNGs
-2. Write 1-page pitch summary for Rice Media / Mothership (lead image = choropleth, plain-language permutation test)
-3. Set up Substack or personal site; establish citable URL before pitching
-4. Run second MCMC seed for robustness check (noted as limitation in §7 of draft)
+1. Write 1-page pitch summary for Rice Media / Mothership (choropleth lead image, plain-language permutation test)
+2. Set up Substack or personal site; establish citable URL before pitching
+3. Run second MCMC seed for robustness check (noted as limitation in §7)
+4. (Optional) Submit to SSRN or SocArXiv for a citable DOI
 
 ---
 

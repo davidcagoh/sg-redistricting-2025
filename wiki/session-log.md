@@ -1,5 +1,38 @@
 # Session Log
 
+## 2026-04-19 (session 15) — LaTeX paper compiled + repo cleanup
+
+### What was done
+
+- **Filled `[repository URL]` placeholder** in `writeup/paper1/draft.md` → `https://github.com/davidcagoh/sg-redistricting-2025`
+
+- **Wrote `writeup/paper1/paper.tex`** — full LaTeX version of the paper in political science working paper format (Times font, 1.5-spaced, 1.25in margins; appropriate for *Statistics and Public Policy* / *Political Analysis* submission):
+  - Added abstract (not present in Markdown draft)
+  - `booktabs` tables, `natbib` author-year citations, `hyperref` URLs, `adjustbox`/`makecell` for wide tables
+  - Both figures (`combined_summary.png`, `choropleth_2020_2025.png`) linked from `output/`
+  - Email set to `daveed@cs.toronto.edu`
+
+- **Compiled `writeup/paper1/paper.pdf`** — 16 pages, zero errors
+
+- **Repo root cleanup:**
+  - `sanity.py` → `scripts/sanity.py`
+  - `gerrymandering_project.qgz` → `qgis/gerrymandering_project.qgz`
+  - Deleted `.coverage` and `.DS_Store` (build artifacts)
+  - Updated `CLAUDE.md` for both new paths
+
+### State at end of session
+
+LaTeX paper compiles clean at `writeup/paper1/paper.tex` / `paper.pdf`. Repo root is tidy. Draft.md and paper.tex are in sync. Ready for dissemination prep.
+
+### What to do next session
+
+1. Write 1-page pitch summary (choropleth lead image + plain-language permutation test + caveats) for Rice Media / Mothership
+2. Set up Substack or personal site; establish citable URL before pitching
+3. Run second MCMC seed for robustness check (noted as limitation in §7)
+4. (Optional) Submit preprint to SSRN or SocArXiv for a citable DOI
+
+---
+
 ## 2026-04-18 (session 14) — paper 1 draft written (4,581 words)
 
 ### What was done

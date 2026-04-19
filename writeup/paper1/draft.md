@@ -255,7 +255,7 @@ The Singapore electoral system's central anomaly is structural and institutional
 
 **Permutation test.** Hypergeometric test and Fisher's exact test. Competitive threshold: PAP vote share <55% in the relevant election year. All computations in Python using `scipy.stats`.
 
-**Code and data.** Available at [repository URL].
+**Code and data.** Available at https://github.com/davidcagoh/sg-redistricting-2025.
 
 ---
 

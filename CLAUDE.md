@@ -10,7 +10,7 @@ python3 src/merge_census_and_geospatial.py       # census merge + subzone+popula
 python3 src/validate_and_copy_geospatial.py      # copy/validate electoral boundary GeoJSON
 
 # Sanity-check all processed files
-python3 sanity.py                                # requires geopandas (pip install geopandas)
+python3 scripts/sanity.py                        # requires geopandas (pip install geopandas)
 
 # Run tests
 pytest --cov=src --cov-report=term-missing       # 481 tests
@@ -22,7 +22,7 @@ python -m src.analysis.cli run-ensemble --run-id <run_id> [--n-steps 10000]
 python -m src.analysis.cli diff --run-id <run_id> --year-2020-run-id <id> --year-2025-run-id <id>
 ```
 
-Key dependencies not in requirements.txt that `sanity.py` needs: `geopandas`. Install with `pip install geopandas` or `conda install geopandas`.
+Key dependencies not in requirements.txt that `scripts/sanity.py` needs: `geopandas`. Install with `pip install geopandas` or `conda install geopandas`.
 
 ## Architecture
 
@@ -84,7 +84,7 @@ data/raw/  →  src/  →  data/processed/  →  src/analysis/  →  output/
 
 ## QGIS project
 
-`gerrymandering_project.qgz` is the primary QGIS workspace. Load processed GeoJSON files from `data/processed/` as layers.
+`qgis/gerrymandering_project.qgz` is the primary QGIS workspace. Load processed GeoJSON files from `data/processed/` as layers.
 
 
 READ WIKI/ BEFORE PROCEEDING
