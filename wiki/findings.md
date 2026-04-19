@@ -112,7 +112,61 @@ Additional tests:
 
 ---
 
-## 6. Size vs Politics
+## 6. Boundary Change Permutation Test (H&M-style)
+
+This section formalises the boundary change observation as a statistical test in the spirit of Herschlag & Mattingly's ensemble approach for NC: generate a null distribution, measure where the actual redistricting falls.
+
+**Setup.** 114 subzones changed constituency between 2020 and 2025. Of these:
+- 52 came from **competitive 2020 constituencies** (PAP <55%: Bukit Batok, East Coast, West Coast)
+- 7 ended up in **competitive 2025 constituencies** (PAP <55%: Jalan Kayu only)
+
+**Test.** Under random redistribution of the 114 changed subzones — keeping the same 2025 constituency structure but randomising which subzone goes where — we would expect approximately **3.2** of the 52 competitive-origin subzones to land in a competitive 2025 constituency (the hypergeometric expectation: 52 × 7 / 114).
+
+**Actual result: 0.**
+
+| | Competitive 2025 destination | Non-competitive 2025 destination | Total |
+|---|---|---|---|
+| Competitive 2020 origin | **0** | 52 | 52 |
+| Non-competitive origin | 7 | 55 | 62 |
+| Total | 7 | 107 | 114 |
+
+Fisher's exact test (one-sided): **p = 0.012.** Hypergeometric CDF P(X ≤ 0): **p = 0.012.**
+
+The actual redistricting lies at the **1.2th percentile** of the null distribution for this statistic.
+
+### What the new competitive seat was built from
+
+The only competitive 2025 PAP constituency that received changed subzones is **Jalan Kayu** (PAP 51.5%). All 7 subzones feeding it came from **Ang Mo Kio GRC** (PAP 71.9% in 2020 — a stronghold). The key transfer was FERNVALE (58,800 residents), the single largest subzone move.
+
+The populations of the three dissolved competitive constituencies (West Coast 51.7%, Bukit Batok 54.8%, East Coast 53.4%) were not used to populate the new competitive seat. They were absorbed into safe and stronghold constituencies instead.
+
+### Competitive seat geography shift
+
+Of 7 competitive PAP constituencies (PAP <60%) in 2020:
+- **6 were dissolved or merged** (West Coast, Bukit Batok, Marine Parade, Marymount, Bukit Panjang, Chua Chu Kang)
+- **1 survived by name** (East Coast) — but its PAP share rose from 53.4% to 58.7%, moving from marginal to safe
+
+Of 7 competitive PAP constituencies in 2025:
+- **6 are brand new** (Jalan Kayu, Tampines, Sembawang West, Punggol, Tampines Changkat, West Coast-Jurong West)
+- **1 survived** (East Coast, now a different electoral shape)
+
+The 2025 redistricting effectively relocated the set of competitive seats to entirely different geographic areas, while absorbing the populations of the previous competitive constituencies into safe territory.
+
+### Correlation: competitive origins → larger upward shift
+
+Across all 114 changed subzones, Pearson r between origin PAP% and Δ(destination − origin) PAP% = **−0.444 (p < 0.001)**. More competitive 2020 origins show larger positive shifts in destination PAP% — the most competitive subzones moved to the most disproportionately safer seats.
+
+### H&M comparison
+
+Herschlag & Mattingly showed North Carolina's congressional map was a partisan outlier within the space of geometrically valid plans satisfying stated criteria. Our test asks a different but analogous question: within the space of possible assignments of the 114 changed subzones to the actual 2025 constituency structure, is Singapore's redistricting politically anomalous?
+
+The answer is yes, at p = 0.012. The specific anomaly: competitive-origin populations were systematically excluded from competitive-destination constituencies, and the new competitive seats were instead built from safe PAP stronghold populations.
+
+**Caveats.** (1) The test conditions on the actual 2025 constituency structure being fixed; it does not test whether that structure itself is anomalous. (2) The result is sensitive to the PAP <55% threshold for "competitive" — the 7 competitive 2025 destinations are all coded as `marginal_pap` in Jalan Kayu; expanding to PAP <60% would add more destinations and potentially dilute the finding. (3) With only 3 competitive 2020 constituencies, the result is statistically fragile to threshold choices at the margin.
+
+---
+
+## 7. Size vs Politics
 
 Mean voters per seat by political category (2020):
 
@@ -141,17 +195,19 @@ Opposition constituencies average ~7.5% more voters per seat than PAP stronghold
 
 5. **Several 2025 boundary changes restructured competitive and marginal seats.** Bukit Batok marginal SMC was eliminated; Macpherson stronghold SMC was absorbed into a walkover GRC; marginal West Coast was merged with safe Jurong West.
 
+6. **The competitive-seat-exclusion pattern is statistically significant (p = 0.012).** Among 114 changed subzones, those from competitive 2020 constituencies were systematically excluded from competitive 2025 constituencies. Expected overlap under randomness: 3.2 subzones. Actual: 0. The new competitive seat (Jalan Kayu) was built entirely from Ang Mo Kio stronghold population, not from the populations of dissolved competitive constituencies.
+
 ### What the data does not support
 
 - The MCMC analysis **cannot** demonstrate that Singapore's boundaries are gerrymandered in the conventional sense (irregular shapes optimised for partisan advantage). The compactness and planning-area-cohesion results point the other way.
-- The boundary change analysis **cannot** establish intent. Seat restructuring is consistent with both administrative updating (responding to population growth) and strategic boundary manipulation. The 2025 data alone cannot distinguish these.
+- The boundary change permutation test **cannot** establish intent. The same pattern is consistent with administrative population rebalancing that coincidentally relocated competitive seats geographically. The test demonstrates the pattern is unlikely by chance; it cannot distinguish the cause.
 - The malapportionment per seat **is very modest** when measured by votes-per-seat-won (0.95 ratio). The large seat–vote gap comes from the GRC system's amplification property, not from deliberately over- or under-sized constituencies.
 
 ### Where undeclared intentions might exist
 
-The GRC system itself is the structural mechanism that matters most. The data is most consistent with a system designed to guarantee large seat majorities from plurality vote shares — regardless of boundary drawing specifics. The placement of GRCs (which determines where the seat-bonus mechanism applies) is harder to analyse because GRC size varies, nomination costs are high, and the system has no obvious non-partisan benchmark.
+The GRC system itself is the structural mechanism that matters most. The data is most consistent with a system designed to guarantee large seat majorities from plurality vote shares — regardless of boundary drawing specifics.
 
-The one empirical signal that warrants further investigation: **the pattern of which SMCs get dissolved and which get preserved**. Marginal PAP SMCs (Bukit Batok, Hong Kah North) were eliminated or restructured in 2025, while safe ones persisted. This is a small-sample observation but directionally consistent with boundary drawing that minimises marginal constituencies.
+The boundary change permutation result (§6) is the strongest new empirical signal: competitive constituencies' populations were systematically channelled away from the one new competitive seat in 2025, and the new competitive seats are geographically relocated to areas previously held by PAP strongholds. Whether this reflects a deliberate strategy to reset the competitive electoral geography — replacing known competitive zones with newly competitive ones in different communities — cannot be determined from the data alone.
 
 ---
 
@@ -170,3 +226,5 @@ The one empirical signal that warrants further investigation: **the pattern of w
 6. **Subzone-to-constituency assignment by areal majority:** Subzones straddling boundary lines may be misassigned. Edge effects are unquantified.
 
 7. **Single MCMC seed:** Results should be verified with at least 3 independent seeds to confirm ensemble mixing.
+
+8. **Permutation test conditions on the 2025 structure:** The boundary change test (§6) treats the 2025 constituency structure as fixed and tests only the within-structure allocation of changed subzones. It does not test whether the 2025 structure itself (which constituencies exist, how many seats each has) is anomalous. Testing the GRC placement decision requires a different model that can represent variable-size multi-member constituencies.

@@ -1,5 +1,47 @@
 # Session Log
 
+## 2026-04-18 (session 13) — boundary change permutation test (H&M-style)
+
+### What was done
+
+- **Built `src/analysis/boundary_permutation.py`** — formal statistical test asking: among the 114 subzones that changed constituency 2020→2025, did those from competitive 2020 constituencies (PAP <55%) systematically avoid landing in competitive 2025 constituencies?
+
+- **Primary test: Fisher's exact / hypergeometric** — 2×2 contingency table of (competitive/non-competitive origin) × (competitive/non-competitive destination). One-sided Fisher's exact and hypergeometric CDF.
+
+- **Four output plots** in `output/electoral_profile/boundary_permutation/`:
+  - `hypergeometric_test.png` — null PMF with actual value (0) marked; H&M-style distributional figure
+  - `destination_flow.png` — where each origin category's subzones ended up (% of population)
+  - `origin_vs_delta.png` — scatter of origin PAP% vs shift in destination PAP%; r=−0.444 p<0.001
+  - `competitive_seat_geography.png` — 2020 competitive PAP constituencies (6/7 dissolved) vs 2025 (6/7 new)
+
+- **Updated `wiki/findings.md`** — added §6 "Boundary Change Permutation Test (H&M-style)" and revised §8 (What Can Be Said) to incorporate the new finding.
+
+### Key quantitative results
+
+**Primary test:**
+- N = 114 changed subzones; K = 7 landed in competitive 2025 destinations (Jalan Kayu only)
+- n = 52 came from competitive 2020 constituencies (Bukit Batok, East Coast, West Coast)
+- Actual overlap: **0** (expected under H₀: 3.2)
+- Fisher's exact p = **0.012** (one-sided); hypergeometric P(X≤0) = **0.012**
+- Actual redistricting lies at the **1.2th percentile** of the null distribution
+
+**Competitive seat migration:**
+- The sole new competitive 2025 PAP constituency (Jalan Kayu, PAP 51.5%) was seeded entirely from **Ang Mo Kio stronghold** subzones (FERNVALE 58,800 + 6 smaller subzones, all from AMK GRC at PAP 71.9%)
+- 6 of 7 competitive PAP 2020 constituencies were dissolved/merged; 6 of 7 competitive PAP 2025 constituencies are brand new
+- Only East Coast survived by name, but PAP share rose 53.4%→58.7% (marginal→safe)
+
+**Correlation:** Pearson r = −0.444 (p<0.001) between origin PAP% and Δ(destination−origin) PAP%. More competitive 2020 origins show larger positive shifts → competitive-origin subzones moved to disproportionately safer 2025 seats.
+
+### H&M comparison
+
+H&M showed NC's map was a partisan outlier within geometrically valid plans. Our test shows Singapore's 2025 redistricting is a statistical outlier in the POLITICAL SELECTION of which subzones go where — competitive-origin populations were systematically excluded from the new competitive constituency, at p=0.012. Key caveat: this conditions on the 2025 constituency structure being fixed; it does not test whether that structure itself is anomalous.
+
+### State at end of session
+
+498 tests still passing (no new tests written — this is analysis/output code only). `wiki/findings.md` updated with §6. All plots committed.
+
+---
+
 ## 2026-04-18 (session 12) — electoral profile analysis + findings written
 
 ### What was done
