@@ -1,5 +1,36 @@
 # Session Log
 
+## 2026-04-18 (session 14) — paper 1 draft written (4,581 words)
+
+### What was done
+
+- **Created `wiki/paper-plan.md`** — two-paper structure: paper 1 scope/figures/caveats; paper 2 algorithm requirements (variable-size multi-member ReCom); dissemination order (self-publish → Rice/Mothership → Reddit → WP); demographic proxy as possible interim bridge flagged.
+
+- **Created `writeup/paper1/outline.md`** — 8-section outline with word budgets, figure placement, and register notes ("statistically anomalous competitive exclusion pattern" not "gerrymandering").
+
+- **Created `writeup/paper1/draft.md`** — full 4,581-word draft paper:
+  - §1 Introduction: hook (lowest opposition seat count despite competitive popular vote)
+  - §2 Background: GRC block-vote mechanism, seat–vote gap table, ensemble approach
+  - §3 MCMC results: planning-area cohesion 0th pctile, compactness 100th pctile, administrative-logic framing
+  - §4 Minority rationale: t-test p=0.117–0.441, GRC placement not predicted by minority %
+  - §5 Class politics: 4-room HDB r=0.483 p=0.006 in 2020; signal vanishes in 2025; two candidate explanations
+  - §6 Permutation test (headline): 0 of expected 3.2 overlap, p=0.012; Fernvale/Jalan Kayu narrative; competitive geography relocation; r=−0.444 correlation
+  - §7 Caveats: conditioned structure, threshold sensitivity, n=3 fragility, intent cannot be established, single seed
+  - §8 Conclusion: GRC system is primary mechanism; permutation test adds secondary finding on subzone allocation
+
+### State at end of session
+
+Draft complete at `writeup/paper1/draft.md`. Figures are referenced by filename but not embedded — requires Substack/platform step before publication. Repository URL placeholder in methods note. Ready for review pass before dissemination.
+
+### What to do next session
+
+1. Review draft — tighten language, check figure captions match actual PNG outputs
+2. Write the 1-page pitch summary (outline §dissemination: lead image + plain-language permutation test + caveats)
+3. Decide publishing platform (Substack setup or personal site) and create URL before pitching
+4. (Optional) Run second MCMC seed to complete the robustness check noted in §7
+
+---
+
 ## 2026-04-18 (session 13) — boundary change permutation test (H&M-style)
 
 ### What was done

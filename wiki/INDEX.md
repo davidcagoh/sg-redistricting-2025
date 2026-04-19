@@ -1,30 +1,28 @@
 # Project Wiki — Singapore Electoral Redistricting Analysis
 
-## Status (2026-04-17, session 10)
+## Status (2026-04-18, session 14)
 
-**Ensemble running.** Both ISSUE-4 (BipartitionWarning) and ISSUE-5 (isolated node 317) are fixed. 489 tests green. Chain at ~0.15 s/step; `data/processed/ensemble/sg2025/` writes on completion.
+**Paper 1 draft complete.** Analysis is finished. `writeup/paper1/draft.md` is a full 4,581-word draft ready for review and publication prep.
 
 | Phase | Status |
 |-------|--------|
 | Phase 0: Foundations | ✅ complete |
-| Phase 1: Graph | ✅ complete (332 nodes → 327 after filtering; 4 zero-pop islands + node 317 excluded) |
+| Phase 1: Graph | ✅ complete (332 nodes → 327 after filtering) |
 | Phase 2: MCMC skeleton | ✅ complete |
 | Phase 3: Metrics | ✅ complete |
 | Phase 4: Ensemble driver | ✅ complete |
 | Phase 5: Diff + Reporting | ✅ complete |
-| **Seeding fix (ISSUE-1)** | ✅ BFS fallback — 489 tests green |
-| **Chain rejection fix (ISSUE-4)** | ✅ `allow_pair_reselection=True` + `max_attempts=1000` in recom.py |
-| **Isolated node fix (ISSUE-5)** | ✅ `filter_for_mcmc` default `min_pop=float("inf")` |
-| **Ensemble run (sg2025, 10 000 steps)** | 🟡 in progress (PID 65626) |
-| **Diff + reporting** | 🔴 waiting on ensemble |
+| **Electoral profile analysis** | ✅ complete — findings.md |
+| **Boundary permutation test** | ✅ complete — p=0.012 |
+| **Paper 1 draft** | ✅ complete — writeup/paper1/draft.md |
+| **Publication prep** | 🔴 not started — needs platform, figures embedded, URL |
 
 ## Next steps (immediately actionable)
 
-1. Confirm ensemble completed: `ls data/processed/ensemble/sg2025/`
-2. Assign actual plans: `python -m src.analysis.cli assign-actual --year 2020` and `--year 2025`
-3. Run diff: `python -m src.analysis.cli diff --run-id diff_sg2025 --year-2020-run-id sg2025 --year-2025-run-id sg2025`
-4. Review `data/processed/ensemble/sg2025/` — `metrics.parquet`, `diff_report.json`, `*.png`
-5. Focus metrics: `towns_split`, `max_abs_pop_dev`, `mean_pp` — are 2020/2025 plans outliers?
+1. Review `writeup/paper1/draft.md` — tighten language, verify figure captions vs actual PNGs
+2. Write 1-page pitch summary for Rice Media / Mothership (lead image = choropleth, plain-language permutation test)
+3. Set up Substack or personal site; establish citable URL before pitching
+4. Run second MCMC seed for robustness check (noted as limitation in §7 of draft)
 
 ---
 
@@ -41,6 +39,8 @@
 | [Issues](issues.md) | Known blockers and bugs with root cause analysis |
 | [Implementation Plan](implementation-plan.md) | Phase-by-phase technical specification |
 | [Session Log](session-log.md) | Chronological work log |
+| [Findings](findings.md) | All quantitative results (MCMC, malapportionment, demographics, permutation test) |
+| [Paper Plan](paper-plan.md) | Two-paper structure, dissemination strategy, paper 2 scope |
 
 ### Literature
 

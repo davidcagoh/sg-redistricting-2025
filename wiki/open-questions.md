@@ -22,9 +22,6 @@ Part of the [project wiki](INDEX.md). See also: [Decisions](decisions.md) · [Me
 6. **What are the HDB town boundaries as a GIS layer?**  
    HDB towns are the natural "communities of interest" for Singapore (analogous to US counties). We have HDB block data in `data/raw/hdb/` but need to confirm whether town-level polygons are derivable or available separately.
 
-7. **Is the 2020→2025 subzone reassignment recoverable from GeoJSON diff?**  
-   If we can spatially join 2020 and 2025 electoral boundary GeoJSONs to subzones, we can map which subzones changed constituency. This enables a targeted descriptive analysis without needing the ensemble.
-
 ## Resolved
 
 1. **What is the primary analysis goal?** — Resolved 2026-04-12.  
@@ -32,3 +29,6 @@ Part of the [project wiki](INDEX.md). See also: [Decisions](decisions.md) · [Me
 
 2. **Why does BFS seeding produce non-contiguous districts on the real graph?** — Resolved 2026-04-17.  
    Node 317 is an isolated subzone (pop=50, no adjacency edges). The old `filter_for_mcmc(min_pop=1)` default kept it, and the BFS remainder-assignment loop assigned it to a non-adjacent district. Fixed by changing `filter_for_mcmc` default to `min_pop=float("inf")`. See `decisions.md`.
+
+3. **Is the 2020→2025 subzone reassignment recoverable from GeoJSON diff?** — Resolved 2026-04-18 (session 13).  
+   Yes. `src/analysis/boundary_permutation.py` recovers 114 changed subzones by spatial join of 2020 and 2025 electoral boundary GeoJSONs to URA subzones. Full permutation test built on this assignment. See `findings.md §6`.
