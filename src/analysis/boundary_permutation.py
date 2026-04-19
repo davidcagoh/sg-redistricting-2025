@@ -20,6 +20,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from scipy import stats
 from scipy.stats import hypergeom
 
@@ -339,6 +340,201 @@ def plot_seat_geography(out_path: Path):
     print(f"  → {out_path}")
 
 
+# ── figure 5: combined summary (hypergeometric + seat geography) ──────────────
+def plot_combined_summary(result: dict, out_path: Path):
+    """Left: hypergeometric null. Right: 2020 vs 2025 competitive seat survival."""
+    cons_2020 = pd.read_csv(CONS_2020_CSV)
+    cons_2025 = pd.read_csv(CONS_2025_CSV)
+
+    pap_2020 = cons_2020[
+        (cons_2020["pap_pct"] < 0.60) & (cons_2020["political_category"] != "opposition")
+    ].copy().sort_values("pap_pct")
+    pap_2025 = cons_2025[
+        (cons_2025["pap_pct"] < 0.60) & (cons_2025["political_category"] != "opposition")
+    ].copy().sort_values("pap_pct")
+
+    names_2020 = set(pap_2020["constituency"])
+    names_2025 = set(pap_2025["constituency"])
+    pap_2020["status"] = pap_2020["constituency"].apply(
+        lambda c: "survived" if c in names_2025 else "dissolved/merged"
+    )
+    pap_2025["status"] = pap_2025["constituency"].apply(
+        lambda c: "survived" if c in names_2020 else "new"
+    )
+
+    fig = plt.figure(figsize=(16, 6))
+    fig.patch.set_facecolor("#f8f8f8")
+
+    # Widths: left panel wider (the hyper dist), two narrow right panels
+    gs = fig.add_gridspec(1, 3, width_ratios=[2.2, 1, 1], wspace=0.38)
+    ax_hyp = fig.add_subplot(gs[0])
+    ax_2020 = fig.add_subplot(gs[1])
+    ax_2025 = fig.add_subplot(gs[2])
+
+    # ── left: hypergeometric ──
+    k_vals = np.array(result["k_vals"])
+    pmf = np.array(result["pmf"])
+    x_actual = result["x_actual_overlap"]
+    expected = result["expected_overlap"]
+    p = result["p_hypergeometric"]
+
+    ax_hyp.set_facecolor("#f8f8f8")
+    colors = ["#d64e12" if k <= x_actual else "#5b9bd5" for k in k_vals]
+    ax_hyp.bar(k_vals, pmf, color=colors, edgecolor="white", linewidth=0.8, width=0.65)
+    ax_hyp.axvline(expected, color="#333", linewidth=1.5, linestyle="--", alpha=0.7,
+                   label=f"Expected = {expected:.1f}")
+    ax_hyp.annotate(
+        f"Actual = 0\n(p = {p:.3f})",
+        xy=(0, pmf[0]), xytext=(0.7, pmf[0] + 0.035),
+        arrowprops=dict(arrowstyle="->", color="#d64e12", lw=1.5),
+        color="#d64e12", fontsize=10.5, fontweight="bold",
+    )
+    ax_hyp.set_xlabel(
+        "# competitive-origin subzones landing in\ncompetitive 2025 constituencies",
+        fontsize=10,
+    )
+    ax_hyp.set_ylabel("Probability", fontsize=10)
+    ax_hyp.set_title(
+        "Hypergeometric null distribution\n"
+        "(H&M-style: where does actual redistricting fall?)",
+        fontsize=11, fontweight="bold", pad=10,
+    )
+    ax_hyp.legend(fontsize=9)
+    ax_hyp.set_xticks(k_vals)
+    ax_hyp.spines[["top", "right"]].set_visible(False)
+
+    n_comp = result["n_competitive_origins"]
+    K = result["K_competitive_destinations"]
+    N = result["N_total_changed"]
+    ctx = (
+        f"{N} subzones changed 2020→2025\n"
+        f"{n_comp} from competitive 2020 constituencies\n"
+        f"(Bukit Batok, East Coast, West Coast)\n"
+        f"{K} changed subzones → competitive 2025\n"
+        f"(Jalan Kayu only, seeded from AMK stronghold)"
+    )
+    ax_hyp.text(0.97, 0.97, ctx, transform=ax_hyp.transAxes, fontsize=8,
+                va="top", ha="right",
+                bbox=dict(boxstyle="round,pad=0.35", facecolor="white", alpha=0.85))
+
+    # ── right panels: seat survival ──
+    status_colors_2020 = {"dissolved/merged": "#d64e12", "survived": "#5b9bd5"}
+    status_colors_2025 = {"new": "#2ca02c", "survived": "#5b9bd5"}
+
+    for ax, df_sub, title, status_colors in [
+        (ax_2020, pap_2020, "2020 competitive\nPAP seats (n=7)", status_colors_2020),
+        (ax_2025, pap_2025, "2025 competitive\nPAP seats (n=7)", status_colors_2025),
+    ]:
+        ax.set_facecolor("#f8f8f8")
+        bar_colors = [status_colors[s] for s in df_sub["status"]]
+        ax.barh(range(len(df_sub)), df_sub["pap_pct"] * 100,
+                color=bar_colors, edgecolor="white", linewidth=0.4)
+        ax.set_yticks(range(len(df_sub)))
+        ax.set_yticklabels([c.title() for c in df_sub["constituency"]], fontsize=8)
+        ax.axvline(55, color="#e8a838", linewidth=1.1, linestyle="--", alpha=0.8)
+        ax.set_xlabel("PAP vote share (%)", fontsize=9)
+        ax.set_xlim(40, 65)
+        ax.set_title(title, fontsize=10.5, fontweight="bold", pad=8)
+        ax.spines[["top", "right"]].set_visible(False)
+        patches = [mpatches.Patch(color=c, label=lab) for lab, c in status_colors.items()]
+        ax.legend(handles=patches, fontsize=7.5, loc="lower right")
+
+    fig.suptitle(
+        "Singapore 2025 redistricting: competitive constituencies were systematically\n"
+        "relocated — not preserved — and their populations moved to safer seats (p = 0.012)",
+        fontsize=12, fontweight="bold", y=1.03,
+    )
+
+    plt.savefig(out_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  → {out_path}")
+
+
+# ── figure 6: choropleth map 2020 vs 2025 ────────────────────────────────────
+def plot_choropleth(out_path: Path):
+    try:
+        import geopandas as gpd
+    except ImportError:
+        print("  geopandas not available — skipping choropleth")
+        return
+
+    geo_2020 = gpd.read_file(ROOT / "data/processed/electoral_boundaries_2020.geojson")
+    geo_2025 = gpd.read_file(ROOT / "data/processed/electoral_boundaries_2025.geojson")
+    cons_2020 = pd.read_csv(CONS_2020_CSV)[["constituency", "pap_pct", "political_category"]]
+    cons_2025 = pd.read_csv(CONS_2025_CSV)[["constituency", "pap_pct", "political_category"]]
+
+    # Normalise join key
+    geo_2020["key"] = geo_2020["ED_DESC"].str.upper().str.strip()
+    geo_2025["key"] = geo_2025["ED_DESC"].str.upper().str.strip()
+    cons_2020["key"] = cons_2020["constituency"].str.upper().str.strip()
+    cons_2025["key"] = cons_2025["constituency"].str.upper().str.strip()
+
+    gdf_2020 = geo_2020.merge(cons_2020, on="key", how="left")
+    gdf_2025 = geo_2025.merge(cons_2025, on="key", how="left")
+
+    # Colour category: 5 levels
+    CAT_ORDER = ["opposition", "marginal_pap", "safe_pap", "stronghold_pap", "walkover", "unknown"]
+    PALETTE = {
+        "opposition":    "#7b2d8b",   # purple
+        "marginal_pap":  "#e8502a",   # vivid orange-red
+        "safe_pap":      "#74b4d8",   # mid blue
+        "stronghold_pap":"#1f5fa6",   # dark blue
+        "walkover":      "#aaaaaa",   # grey
+        "unknown":       "#eeeeee",
+    }
+    LEGEND_LABELS = {
+        "opposition":    "Opposition-held",
+        "marginal_pap":  "Competitive PAP (<55%)",
+        "safe_pap":      "Safe PAP (55–65%)",
+        "stronghold_pap":"Stronghold PAP (>65%)",
+        "walkover":      "Walkover (uncontested)",
+    }
+
+    def fill_color(cat):
+        return PALETTE.get(cat if isinstance(cat, str) else "unknown", PALETTE["unknown"])
+
+    for gdf in (gdf_2020, gdf_2025):
+        gdf["fill"] = gdf["political_category"].apply(fill_color)
+        gdf["is_competitive"] = gdf["political_category"].isin(["marginal_pap", "opposition"])
+
+    fig, axes = plt.subplots(1, 2, figsize=(16, 7))
+    fig.patch.set_facecolor("#1a1a2e")
+
+    titles = ["2020 General Election", "2025 General Election"]
+    for ax, gdf, title in zip(axes, [gdf_2020, gdf_2025], titles):
+        ax.set_facecolor("#1a1a2e")
+        # Base layer: all constituencies
+        gdf.plot(ax=ax, color=gdf["fill"], edgecolor="#ffffff", linewidth=0.5)
+        # Thick border for competitive seats
+        gdf[gdf["is_competitive"]].plot(
+            ax=ax, color="none", edgecolor="#ffffff", linewidth=2.2
+        )
+        ax.set_title(title, fontsize=14, fontweight="bold", color="white", pad=10)
+        ax.axis("off")
+
+    # Legend
+    legend_patches = [
+        mpatches.Patch(facecolor=PALETTE[k], edgecolor="#ffffff", linewidth=0.5, label=LEGEND_LABELS[k])
+        for k in ["marginal_pap", "safe_pap", "stronghold_pap", "walkover", "opposition"]
+    ]
+    fig.legend(
+        handles=legend_patches, loc="lower center", ncol=5,
+        fontsize=9.5, framealpha=0.15,
+        facecolor="#1a1a2e", labelcolor="white",
+        bbox_to_anchor=(0.5, -0.04),
+    )
+    fig.suptitle(
+        "Singapore Electoral Map: constituency competitiveness 2020 vs 2025\n"
+        "Competitive PAP seats (<55%) highlighted with thick border",
+        fontsize=13, fontweight="bold", color="white", y=1.01,
+    )
+
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=150, bbox_inches="tight", facecolor="#1a1a2e")
+    plt.close(fig)
+    print(f"  → {out_path}")
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 def main():
     print("Loading boundary change data...")
@@ -368,6 +564,8 @@ def main():
     plot_flow(flow, OUT_DIR / "destination_flow.png")
     plot_scatter(df, OUT_DIR / "origin_vs_delta.png")
     plot_seat_geography(OUT_DIR / "competitive_seat_geography.png")
+    plot_combined_summary(result, OUT_DIR / "combined_summary.png")
+    plot_choropleth(OUT_DIR / "choropleth_2020_2025.png")
 
     print("\nDone. Results in:", OUT_DIR)
 
