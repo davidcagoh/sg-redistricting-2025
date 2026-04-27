@@ -95,6 +95,37 @@ def build_subzone_graph(
     return G
 
 
+def attach_pct_minority(
+    graph: nx.Graph,
+    pct_minority_lookup: dict[str, float],
+    *,
+    default: float = 0.0,
+) -> nx.Graph:
+    """Attach ``pct_minority`` to every node in *graph* (mutates in place).
+
+    Parameters
+    ----------
+    graph:
+        Graph produced by ``build_subzone_graph``.  Each node must have a
+        ``subzone_name_norm`` attribute.
+    pct_minority_lookup:
+        Mapping from normalized subzone name → minority share, as returned
+        by ``io_layer.load_ethnic_data()``.
+    default:
+        Value assigned to nodes whose name is absent from the lookup
+        (e.g. non-residential subzones with no Census row).
+
+    Returns
+    -------
+    nx.Graph
+        The same *graph* object with ``pct_minority`` set on every node.
+    """
+    for node, attrs in graph.nodes(data=True):
+        name = attrs.get("subzone_name_norm", "")
+        graph.nodes[node]["pct_minority"] = pct_minority_lookup.get(name, default)
+    return graph
+
+
 def identify_islands(graph: nx.Graph) -> list[list[Any]]:
     """Return non-mainland connected components as lists of node IDs.
 

@@ -25,3 +25,5 @@ data/reference/*.zip
 
 # Research PDFs
 related-literature/*.pdf
+
+.env

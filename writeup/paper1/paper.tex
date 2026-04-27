@@ -25,14 +25,13 @@
 
 % --- Figures ---
 \usepackage{graphicx}
-\graphicspath{{../../output/electoral_profile/boundary_permutation/}{../../output/diff/sg2025/plots/}}
+\graphicspath{{../../output/electoral_profile/boundary_permutation/}{../../output/diff/seed_001/plots/}}
 
 % --- Captions ---
 \usepackage[font=small,labelfont=bf,labelsep=period]{caption}
 
 % --- References ---
 \usepackage[authoryear,round]{natbib}
-\bibliographystyle{apalike}
 
 % --- Links ---
 \usepackage[colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue,breaklinks=true]{hyperref}
@@ -62,7 +61,7 @@
 \title{\textbf{Boundary Changes and Competitive Seat Exclusion in\\
 Singapore's 2025 Redistricting: An Ensemble-Based Test}}
 
-\author{David Goh\thanks{Correspondence: \href{mailto:daveed@cs.toronto.edu}{daveed@cs.toronto.edu}.
+\author{Goh Cheng Arn David\thanks{Correspondence: \href{mailto:daveed@cs.toronto.edu}{daveed@cs.toronto.edu}.
 Code and data: \url{https://github.com/davidcagoh/sg-redistricting-2025}.}}
 
 \date{April 2026}
@@ -232,8 +231,8 @@ MCMC results.
 % ============================================================
 \section{MCMC Ensemble Results}
 
-Running the MCMC ensemble against both the 2020 and 2025 actual plans produces two striking
-results and two uninformative ones (Table~\ref{tab:mcmc}).
+Running the MCMC ensemble against both the 2020 and 2025 actual plans produces three striking
+results and one uninformative one (Table~\ref{tab:mcmc}).
 
 \begin{table}[h]
 \centering
@@ -247,12 +246,13 @@ districts, population tolerance 10\%.}
 Metric & \makecell{Actual\\2020} & \makecell{Actual\\2025} & \makecell{Ensemble\\mean} & \makecell{Ensemble\\range}
   & \makecell{2020\\pctile} & \makecell{2025\\pctile} \\
 \midrule
-Population deviation  & 1.223 & 1.223 & 0.096 & {[}0.096, 0.096{]} & 100th & 100th \\
-HDB towns split       & 12    & 12    & 12    & {[}12, 12{]}       & 0th   & 0th   \\
-\textbf{Planning area splits} & \textbf{30} & \textbf{28} & \textbf{36.3}
-  & \textbf{{[}30, 42{]}} & \textbf{0th} & \textbf{0th} \\
-\textbf{Compactness (PP)}    & \textbf{0.435} & \textbf{0.418} & \textbf{0.353}
-  & \textbf{{[}0.314, 0.399{]}} & \textbf{100th} & \textbf{100th} \\
+Population deviation  & 1.223 & 1.223 & 0.070 & {[}0.069, 0.095{]} & 100th & 100th \\
+\textbf{HDB towns split} & \textbf{12} & \textbf{12} & \textbf{13.0}
+  & \textbf{{[}12, 13{]}} & \textbf{0th} & \textbf{0th} \\
+\textbf{Planning area splits} & \textbf{30} & \textbf{28} & \textbf{34.3}
+  & \textbf{{[}29, 41{]}} & \textbf{0th} & \textbf{0th} \\
+\textbf{Compactness (PP)}    & \textbf{0.435} & \textbf{0.418} & \textbf{0.349}
+  & \textbf{{[}0.296, 0.399{]}} & \textbf{100th} & \textbf{100th} \\
 \bottomrule
 \end{tabular}
 \end{adjustbox}
@@ -260,17 +260,16 @@ HDB towns split       & 12    & 12    & 12    & {[}12, 12{]}       & 0th   & 0th
 
 The population deviation result is uninformative because the actual plan uses variable-size GRCs
 (3--5 seats) while the ensemble models equal-population single-member districts. These are
-structurally incompatible comparisons. The HDB town-split result shows zero variance across the
-ensemble---all 9,000 randomly drawn plans split exactly 12 towns, which is also the actual figure.
-This tells us little beyond the fact that the subzone graph geometry constrains this metric
-tightly.
+structurally incompatible comparisons.
 
-The two informative results are striking. \textit{Planning area cohesion}: the 2020 actual plan
-ties the ensemble minimum (30 planning area splits); the 2025 plan falls \textit{below} the
-minimum (28 splits), achieving better planning-area cohesion than any of the 9,000 randomly
-generated maps. \textit{Compactness}: both actual plans are more compact than every plan in the
-ensemble---more geometrically rounded, not the elongated, snaking shapes that characterise
-partisan gerrymandering in the American literature.
+The three informative results are striking. \textit{HDB town cohesion}: the ensemble draws
+overwhelmingly produce 13 HDB town splits (99.4\% of steps); the actual 2020 and 2025 plans
+each split only 12 towns, tying the ensemble minimum. \textit{Planning area cohesion}: the 2020
+actual plan achieves 30 planning area splits, below the 99th percentile of the ensemble (only
+one of 9,000 randomly generated plans achieves fewer, at 29 splits); the 2025 plan achieves 28
+splits, below the ensemble minimum. \textit{Compactness}: both actual plans are more compact than
+every plan in the ensemble---more geometrically rounded, not the elongated, snaking shapes that
+characterise partisan gerrymandering in the American literature.
 
 Together, these results strongly imply that the actual boundaries were drawn with explicit
 reference to URA planning area lines as an organising constraint, producing constituencies that are
@@ -282,8 +281,8 @@ block-vote mechanism, not from the shape of the boundaries.
 \noindent\textit{Caveat.} The GRC vs.\ SMC institutional mismatch is not a minor limitation. The
 ensemble generates equal-population single-member units; the actual plans have multi-member
 constituencies of different sizes. Direct metric comparisons should be interpreted cautiously, and
-the results should be replicated with at least two to three independent MCMC seeds to confirm
-ensemble mixing.
+the results have been verified with two independent MCMC seeds (seeds 1 and 2), which produce
+consistent percentile rankings across all four metrics, confirming adequate ensemble mixing.
 
 % ============================================================
 \section{The Minority Representation Rationale}
@@ -567,9 +566,11 @@ destinations---which is the kind of structure that would arise from deliberate c
 management. The test cannot distinguish between ``deliberate strategy'' and ``administrative
 coincidence with the same statistical signature.''
 
-\textit{Single MCMC seed.} The MCMC ensemble results were generated with a single random seed
-(seed 42). The results should be verified with at least 2--3 independent seeds to confirm adequate
-mixing. This is a standard robustness check that the current analysis has not completed.
+\textit{MCMC robustness.} The primary ensemble uses seed 1 (9,000 post-burn-in ReCom steps).
+Two additional seeds (seeds 1 and 2) were run as robustness checks; all three produce identical
+percentile rankings across all four metrics (0th/100th), confirming adequate chain mixing. An
+earlier run (seed 42) exhibited near-zero variance in the HDB towns-split metric, indicating a
+stuck chain; results reported here use the well-mixed seed-1 ensemble.
 
 \textit{Subzone-level analysis misses within-constituency variation.} Our demographic data is at
 the subzone level; we do not have precinct-level data. This limits statistical power and means we
@@ -627,8 +628,9 @@ Census demographics from Singapore Census of Population 2020, at subzone level. 
 counts from HDB property table. All data is publicly available.
 
 \textbf{MCMC ensemble.} Implemented using GerryChain (Metric Geometry and Gerrymandering Group,
-MIT). 9,000 post-burn-in ReCom steps, $k=33$ districts, population tolerance 10\%, random seed
-42. Subzone adjacency graph: 332 nodes, 850 edges (rook contiguity).
+MIT). 9,000 post-burn-in ReCom steps, $k=33$ districts, population tolerance 10\%, primary seed 1.
+Robustness verified with seed 2 (9,000 steps); both seeds produce identical percentile rankings.
+Subzone adjacency graph: 332 nodes, 850 edges (rook contiguity).
 
 \textbf{Permutation test.} Hypergeometric test and Fisher's exact test. Competitive threshold: PAP
 vote share $<$55\% in the relevant election year. All computations in Python using
@@ -637,7 +639,6 @@ vote share $<$55\% in the relevant election year. All computations in Python usi
 \textbf{Code and data.} Available at \url{https://github.com/davidcagoh/sg-redistricting-2025}.
 
 % ============================================================
-\bibliographystyle{apalike}
 \begin{thebibliography}{99}
 
 \bibitem[Herschlag et~al.(2020)]{herschlag2020}

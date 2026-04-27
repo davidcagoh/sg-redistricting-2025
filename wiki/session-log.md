@@ -1,5 +1,89 @@
 # Session Log
 
+## 2026-04-26 (session 17) — paper 1 robustness + pct_minority + GRC Option A decision
+
+### What was done
+
+- **Robustness check (`robustness_check.py`)** — compared sg2025 (seed=42), seed_001 (seed=1), seed_002 (seed=2):
+  - sg2025 chain was **stuck**: `towns_split` std=0 (always 12), `max_abs_pop_dev` std=0 (always 0.096). KS D=0.994 vs seed_001.
+  - seed_001 and seed_002 consistent with each other (KS D=0.002 for towns_split).
+  - All three seeds agree on percentile rankings: actual plan at 0th/100th percentile for all informative metrics.
+- **Re-ran diff against seed_001** — new primary ensemble. 2020 `pln_area_splits` moves from 0.0% to 0.1% (1/9000 plans achieves 29 splits); all other rankings unchanged.
+- **Updated `writeup/paper1/paper.tex`**:
+  - `towns_split` now bolded (informative); ensemble [12,12]→[12,13]; "two striking" → "three striking"
+  - All ensemble means/ranges updated to seed_001 values
+  - §4 caveat + §7 limitation updated: robustness completed, stuck chain flagged
+  - Technical notes: primary seed 42 → seed 1
+  - Paper recompiled clean at 16 pages
+- **verify_refs.py**: no hallucinations (same as session 16)
+- **`pct_minority` attached to graph nodes**:
+  - Added `load_ethnic_data()` to `src/analysis/io_layer.py` — parses Census 2020 ethnic CSV, filters aggregate rows, returns `dict[subzone_name_norm → pct_minority]` where pct_minority = (Malays + Indians + Others) / Total_Total
+  - Added `attach_pct_minority(graph, lookup)` to `src/analysis/graph_build.py` — mutates graph in place via `subzone_name_norm` join key
+  - Wired into `src/analysis/grc/ensemble.py` (called after `build_pipeline_inputs`)
+  - Added 5 unit tests in `tests/test_io_layer.py` and 6 tests in `tests/test_graph_build.py`; suite now 528 tests, all passing
+- **GRC seeder exploration and pivot**:
+  - Diagnosed structural infeasibility of variable-seat-count ReCom for Singapore: 15 subzones exceed SMC target × 1.2 (largest = 130,980 vs target 49,832). Only 1/100 BFS attempts passed 50% tolerance.
+  - Multiple seeder strategies tried: stratified BFS, absolute-deficit BFS, sequential BFS, unit-merge k=97 (unit max deviation 214%)
+  - Modular approach used: `_unit_merge_grc_seed` added as new function alongside original `_bfs_grc_seed`; bug fixes preserved (empty-district fix, pop_tolerance override parameter)
+  - **Decision: Option A** — post-process paper 1 ensemble with random seat-type assignment. See `wiki/decisions.md#grc-option-a`.
+
+### State at end of session
+
+Paper 1 complete and robust. pct_minority attached to graph nodes. GRC analysis strategy decided: post-process paper 1 ensemble. decisions.md updated.
+
+### What to do next session
+
+1. Implement Option A post-processing script: for each of 9,000 `seed_001` steps, randomly permute seat-type assignment (15×SMC, 8×GRC4, 10×GRC5) N times, compute minority capture (mean pct_minority weighted by pop × seats in GRC districts), build null distribution
+2. Compute actual 2025 GRC configuration's minority capture score
+3. Compare actual vs null distribution (percentile rank, p-value)
+4. Begin paper 2 draft in `writeup/paper2/`
+
+---
+
+## 2026-04-24 (session 16) — paper 2 scaffold + robustness seeds + references.bib
+
+### What was done
+
+- **Created `writeup/paper1/references.bib`** — converted the inline `\thebibliography`
+  from `paper.tex` into a proper BibTeX file (4 entries). Ran `verify_refs.py`:
+  both journal papers (Herschlag 2020, McGhee 2014) verified as LIKELY (title match 1.00);
+  government data sources (ELD, URA) correctly NOT_FOUND in Semantic Scholar.
+
+- **Started MCMC robustness seeds** — kicked off `seed_001` (seed=1) and `seed_002`
+  (seed=2) as background processes. Both confirmed running.
+
+- **Created `src/analysis/grc/`** — full variable-size GRC/SMC ensemble pipeline for paper 2:
+  - `config.py` — `GRCConfig`, `DistrictType`; 2025 structure: 15×SMC + 8×GRC(4) + 10×GRC(5) = 33 districts, 97 seats
+  - `seed_partition.py` — variable-target BFS seeder + `validate_grc_partition`
+  - `recom.py` — `build_variable_recom_proposal`: custom ReCom that handles asymmetric per-district population targets
+  - `metrics.py` — minority capture by district type, seat-type geography by planning area
+  - `ensemble.py` — driver; outputs to `data/processed/ensemble/grc/<run_id>/`
+  - `cli.py` — `python -m src.analysis.grc.cli run-ensemble`
+
+- **Added 36 new tests** in `tests/analysis/grc/` (19 new + 36 total; suite now 517 tests, all passing)
+
+- **Updated `CLAUDE.md`** — added paper 2 pipeline table, separation note, writeup layout, known gap for `pct_minority`
+
+- **Created `writeup/paper2/outline.md`** — research questions, data gaps, planned sections, next steps
+
+- **Paper 1 published on SocArXiv** (user action, noted for provenance)
+
+### State at end of session
+
+Paper 2 code infrastructure complete. `src/analysis/grc/` is self-contained and cleanly
+separated from paper 1 code. MCMC robustness seeds (`seed_001`, `seed_002`) running.
+
+### What to do next session
+
+1. Wait for `seed_001` and `seed_002` to complete; run robustness comparison script
+2. Attach `pct_minority` to graph nodes from Census ethnic CSV (`data/raw/census_2020_subzone/`)
+3. Attach `pap_2020_pct` competitive score to graph nodes from `assign_actual.py` output
+4. Run first GRC ensemble: `python -m src.analysis.grc.cli run-ensemble --run-id grc_sg2025_s42`
+5. Compare actual 2025 GRC placement vs ensemble on minority capture + competitive geography
+6. Begin paper 2 draft
+
+---
+
 ## 2026-04-19 (session 15) — LaTeX paper compiled + repo cleanup
 
 ### What was done

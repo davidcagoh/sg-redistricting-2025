@@ -4,6 +4,18 @@ Part of the [project wiki](INDEX.md). See also: [Methodology](methodology.md) ·
 
 ---
 
+## 2026-04-26 — Paper 2 GRC analysis: post-process paper 1 ensemble (Option A) {#grc-option-a}
+
+**Decision:** Use the existing paper 1 equal-population `seed_001` ensemble (9,000 steps) as the base for GRC minority-capture analysis. For each step, randomly assign seat types (15×SMC, 8×GRC4, 10×GRC5) across the 33 districts and compute minority capture, building a null distribution. Compare to the actual 2025 GRC configuration.
+
+**Why:** The variable-seat-count ReCom approach (paper 2 GRC seeder) was structurally infeasible for Singapore's subzone graph. 15 subzones have populations exceeding the SMC target × 1.2 (largest = 130,980; SMC target ≈ 41,527 × 1.2 = 49,832), meaning those subzones cannot physically be placed in an SMC-sized district. Only 1/100 BFS seeding attempts passed even a 50% population tolerance. Multiple seeding strategies were tried and failed: stratified BFS, absolute-deficit-priority BFS, sequential BFS, and unit-merge with k=97 intermediate units (unit max deviation 214%, too unequal to merge cleanly). The fundamental constraint is Singapore's subzone granularity — some subzones are 3× the SMC target population, making variable-target contiguous partitioning impossible within practical tolerances.
+
+**What was kept in the codebase:** `src/analysis/grc/seed_partition.py` retains the modular additions made during exploration: (a) empty-district bug fix in `_grc_swap_pass`, (b) `pop_tolerance` override parameter in `validate_grc_partition`, (c) `_unit_merge_grc_seed` as a documented modular function alongside the original `_bfs_grc_seed`. These remain as reference and do not affect paper 2's analysis path.
+
+**Implication:** Paper 2 GRC analysis answers: "Given equal-population district boundaries, does the actual seat-type assignment (SMC vs GRC4 vs GRC5) concentrate or dilute minority populations compared to random assignment?" This is methodologically clean — it isolates the seat-type allocation decision from the boundary-drawing decision.
+
+---
+
 ## 2026-04-17 — filter_for_mcmc excludes all non-mainland components by default
 
 **Decision:** Changed `filter_for_mcmc` default from `min_pop=1` to `min_pop=float("inf")`, so all non-mainland connected components are excluded regardless of population.

@@ -231,3 +231,93 @@ def test_load_hdb_property_table_missing_file(tmp_path, monkeypatch):
     monkeypatch.setattr(io, "RAW", tmp_path)
     with pytest.raises(FileNotFoundError):
         io.load_hdb_property_table()
+
+
+# ---------------------------------------------------------------------------
+# load_ethnic_data — unit tests
+# ---------------------------------------------------------------------------
+
+_ETHNIC_HEADER = (
+    "Number,Total_Total,Total_Males,Total_Females,"
+    "Chinese_Total,Chinese_Males,Chinese_Females,"
+    "Malays_Total,Malays_Males,Malays_Females,"
+    "Indians_Total,Indians_Males,Indians_Females,"
+    "Others_Total,Others_Males,Others_Females\n"
+)
+
+
+def _write_ethnic_csv(tmp_path, rows: str) -> None:
+    census_dir = tmp_path / "census_2020_subzone"
+    census_dir.mkdir(parents=True)
+    fname = (
+        "ResidentPopulationbyPlanningAreaSubzoneofResidenceEthnicGroup"
+        "andSexCensusofPopulation2020.csv"
+    )
+    (census_dir / fname).write_text(_ETHNIC_HEADER + rows)
+
+
+def test_load_ethnic_data_basic(tmp_path, monkeypatch):
+    import src.analysis.io_layer as io
+    monkeypatch.setattr(io, "RAW", tmp_path)
+    _write_ethnic_csv(
+        tmp_path,
+        # Total aggregate row (excluded) + planning-area total (excluded) + 2 subzones
+        "Total,4000000,2000000,2000000,3000000,1500000,1500000,500000,250000,250000,300000,150000,150000,200000,100000,100000\n"
+        "Ang Mo Kio - Total,160000,80000,80000,130000,65000,65000,12000,6000,6000,12000,6000,6000,6000,3000,3000\n"
+        "Ang Mo Kio Town Centre,5000,2500,2500,3500,1750,1750,500,250,250,700,350,350,300,150,150\n"
+        "Cheng San,20000,10000,10000,14000,7000,7000,3000,1500,1500,2000,1000,1000,1000,500,500\n",
+    )
+    result = io.load_ethnic_data()
+    # National total and planning-area row must be excluded
+    assert "TOTAL" not in result
+    assert "ANG MO KIO" not in result
+    # Subzone keys are normalized uppercase
+    assert "ANG MO KIO TOWN CENTRE" in result
+    assert "CHENG SAN" in result
+    # pct_minority for Ang Mo Kio Town Centre: (500+700+300)/5000 = 0.30
+    assert abs(result["ANG MO KIO TOWN CENTRE"] - 0.30) < 1e-6
+    # pct_minority for Cheng San: (3000+2000+1000)/20000 = 0.30
+    assert abs(result["CHENG SAN"] - 0.30) < 1e-6
+
+
+def test_load_ethnic_data_suppressed_values(tmp_path, monkeypatch):
+    import src.analysis.io_layer as io
+    monkeypatch.setattr(io, "RAW", tmp_path)
+    _write_ethnic_csv(
+        tmp_path,
+        "Yio Chu Kang North,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-\n",
+    )
+    result = io.load_ethnic_data()
+    # Suppressed row: total=0 so pct_minority defaults to 0.0
+    assert result["YIO CHU KANG NORTH"] == 0.0
+
+
+def test_load_ethnic_data_purely_chinese_subzone(tmp_path, monkeypatch):
+    import src.analysis.io_layer as io
+    monkeypatch.setattr(io, "RAW", tmp_path)
+    _write_ethnic_csv(
+        tmp_path,
+        "Sembawang Hills,7000,3500,3500,7000,3500,3500,0,0,0,0,0,0,0,0,0\n",
+    )
+    result = io.load_ethnic_data()
+    assert result["SEMBAWANG HILLS"] == 0.0
+
+
+def test_load_ethnic_data_missing_file(tmp_path, monkeypatch):
+    import src.analysis.io_layer as io
+    monkeypatch.setattr(io, "RAW", tmp_path)
+    with pytest.raises(FileNotFoundError):
+        io.load_ethnic_data()
+
+
+@pytest.mark.integration
+def test_load_ethnic_data_real_file():
+    from src.analysis.io_layer import load_ethnic_data
+    result = load_ethnic_data()
+    assert isinstance(result, dict)
+    assert len(result) > 200
+    # All values in [0, 1]
+    assert all(0.0 <= v <= 1.0 for v in result.values())
+    # Known high-minority subzone: Little India area (FARRER PARK)
+    assert "FARRER PARK" in result
+    assert result["FARRER PARK"] > 0.3

@@ -24,6 +24,10 @@ _ELECTORAL_FILES = {
 }
 _HDB_BUILDINGS_FILE = "HDBExistingBuilding.geojson"
 _HDB_PROPERTY_FILE = "HDBPropertyInformation.csv"
+_ETHNIC_FILE = (
+    "census_2020_subzone/"
+    "ResidentPopulationbyPlanningAreaSubzoneofResidenceEthnicGroupandSexCensusofPopulation2020.csv"
+)
 
 _SVY21_EPSG = 3414
 
@@ -166,3 +170,64 @@ def load_hdb_property_table() -> pd.DataFrame:
     )
 
     return df
+
+
+def load_ethnic_data() -> dict[str, float]:
+    """Load Census 2020 ethnic breakdown and return pct_minority by subzone.
+
+    ``pct_minority`` is defined as (Malays + Indians + Others) / Total.
+
+    Rows representing planning-area totals (containing " - Total") and the
+    national aggregate row ("Total") are excluded.  Subzones with suppressed
+    data ("-") in any ethnic column are assigned ``pct_minority = 0.0``.
+
+    Returns
+    -------
+    dict[str, float]
+        Mapping from normalized subzone name (uppercase, stripped) to
+        ``pct_minority`` in [0.0, 1.0].  Keys match the ``subzone_name_norm``
+        node attribute produced by ``build_subzone_graph``.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the raw ethnic CSV is absent.
+    ValueError
+        If required columns are missing.
+    """
+    path: Path = RAW / _ETHNIC_FILE
+    if not path.exists():
+        raise FileNotFoundError(
+            f"{path} not found. Expected Census 2020 ethnic subzone CSV."
+        )
+
+    df: pd.DataFrame = pd.read_csv(path, dtype=str)
+
+    required = {"Number", "Total_Total", "Malays_Total", "Indians_Total", "Others_Total"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"Ethnic CSV missing required columns: {missing}")
+
+    # Drop national total and planning-area subtotal rows
+    df = df[
+        (df["Number"] != "Total")
+        & (~df["Number"].str.contains(" - Total", na=False))
+    ].copy()
+
+    numeric_cols = ["Total_Total", "Malays_Total", "Indians_Total", "Others_Total"]
+    for col in numeric_cols:
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
+
+    df["pct_minority"] = df.apply(
+        lambda r: (
+            (r["Malays_Total"] + r["Indians_Total"] + r["Others_Total"]) / r["Total_Total"]
+            if r["Total_Total"] > 0
+            else 0.0
+        ),
+        axis=1,
+    )
+
+    return {
+        normalize_subzone_name(row["Number"]): float(row["pct_minority"])
+        for _, row in df.iterrows()
+    }

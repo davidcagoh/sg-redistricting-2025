@@ -12,7 +12,7 @@ import geopandas as gpd
 import networkx as nx
 from shapely.geometry import box
 
-from src.analysis.graph_build import build_subzone_graph, identify_islands, filter_for_mcmc
+from src.analysis.graph_build import attach_pct_minority, build_subzone_graph, identify_islands, filter_for_mcmc
 
 
 # ---------------------------------------------------------------------------
@@ -499,3 +499,56 @@ def test_real_subzone_graph_smoke() -> None:
     excluded_names = [G.nodes[n].get("subzone_name_norm", str(n)) for n in excluded]
     print(f"\nReal data: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges")
     print(f"Excluded island subzones ({len(excluded)}): {excluded_names}")
+
+
+# ---------------------------------------------------------------------------
+# attach_pct_minority
+# ---------------------------------------------------------------------------
+
+
+def _make_simple_graph() -> nx.Graph:
+    G = nx.Graph()
+    G.add_node(0, subzone_name_norm="ALPHA", pop_total=1000)
+    G.add_node(1, subzone_name_norm="BETA", pop_total=2000)
+    G.add_node(2, subzone_name_norm="GAMMA", pop_total=500)
+    G.add_edge(0, 1)
+    G.add_edge(1, 2)
+    return G
+
+
+class TestAttachPctMinority:
+    def test_attaches_correct_values(self):
+        G = _make_simple_graph()
+        lookup = {"ALPHA": 0.25, "BETA": 0.40}
+        attach_pct_minority(G, lookup)
+        assert G.nodes[0]["pct_minority"] == 0.25
+        assert G.nodes[1]["pct_minority"] == 0.40
+
+    def test_missing_key_uses_default(self):
+        G = _make_simple_graph()
+        lookup = {"ALPHA": 0.25}
+        attach_pct_minority(G, lookup)
+        assert G.nodes[2]["pct_minority"] == 0.0  # GAMMA not in lookup
+
+    def test_custom_default(self):
+        G = _make_simple_graph()
+        attach_pct_minority(G, {}, default=0.15)
+        assert G.nodes[0]["pct_minority"] == 0.15
+        assert G.nodes[1]["pct_minority"] == 0.15
+
+    def test_returns_same_graph(self):
+        G = _make_simple_graph()
+        result = attach_pct_minority(G, {"ALPHA": 0.1, "BETA": 0.2, "GAMMA": 0.3})
+        assert result is G
+
+    def test_all_nodes_get_attribute(self):
+        G = _make_simple_graph()
+        attach_pct_minority(G, {"ALPHA": 0.1, "BETA": 0.2, "GAMMA": 0.3})
+        for n in G.nodes:
+            assert "pct_minority" in G.nodes[n]
+
+    def test_values_in_range(self):
+        G = _make_simple_graph()
+        attach_pct_minority(G, {"ALPHA": 0.0, "BETA": 1.0, "GAMMA": 0.5})
+        vals = [G.nodes[n]["pct_minority"] for n in G.nodes]
+        assert all(0.0 <= v <= 1.0 for v in vals)

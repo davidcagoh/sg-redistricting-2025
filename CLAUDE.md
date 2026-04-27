@@ -13,13 +13,16 @@ python3 src/validate_and_copy_geospatial.py      # copy/validate electoral bound
 python3 scripts/sanity.py                        # requires geopandas (pip install geopandas)
 
 # Run tests
-pytest --cov=src --cov-report=term-missing       # 481 tests
+pytest --cov=src --cov-report=term-missing       # 517 tests
 
-# MCMC ensemble analysis (run in order)
+# Paper 1 — equal-population k=33 ensemble (run in order)
 python -m src.analysis.cli assign-actual --year 2020
 python -m src.analysis.cli assign-actual --year 2025
 python -m src.analysis.cli run-ensemble --run-id <run_id> [--n-steps 10000]
 python -m src.analysis.cli diff --run-id <run_id> --year-2020-run-id <id> --year-2025-run-id <id>
+
+# Paper 2 — variable-size GRC/SMC ensemble (separate CLI, separate output dir)
+python -m src.analysis.grc.cli run-ensemble [--run-id <id>] [--n-steps 10000] [--seed 42]
 ```
 
 Key dependencies not in requirements.txt that `scripts/sanity.py` needs: `geopandas`. Install with `pip install geopandas` or `conda install geopandas`.
@@ -57,7 +60,9 @@ data/raw/  →  src/  →  data/processed/  →  src/analysis/  →  output/
 
 **All processed GeoJSON**: WGS84 (`urn:ogc:def:crs:OGC:1.3:CRS84`), unique polygon ID (`_feature_id` or `FID`).
 
-**Analysis pipeline in `src/analysis/`** (481 tests):
+**Analysis pipeline in `src/analysis/`** (517 tests):
+
+**Paper 1 — equal-population k=33 ensemble** (`src/analysis/`):
 
 | Module | Role |
 |--------|------|
@@ -75,12 +80,36 @@ data/raw/  →  src/  →  data/processed/  →  src/analysis/  →  output/
 | `reporting/tables.py` | Summary CSV + markdown table |
 | `cli.py` | CLI entry: run-ensemble, assign-actual, diff |
 
+**Paper 2 — variable-size GRC/SMC ensemble** (`src/analysis/grc/`):
+
+| Module | Role |
+|--------|------|
+| `config.py` | GRCConfig + DistrictType; 2025 seat vector (15×SMC + 8×GRC4 + 10×GRC5) |
+| `seed_partition.py` | Variable-target BFS seeder + validate_grc_partition |
+| `recom.py` | Variable-target ReCom proposal (per-district population tolerance) |
+| `metrics.py` | Minority capture by district type, seat-type geography |
+| `ensemble.py` | Driver → data/processed/ensemble/grc/<run_id>/ |
+| `cli.py` | CLI entry: `python -m src.analysis.grc.cli run-ensemble` |
+
+**IMPORTANT**: Paper 1 and paper 2 pipelines are completely separate.
+- Paper 1 outputs: `data/processed/ensemble/<run_id>/` (flat, e.g. `sg2025/`, `seed_001/`)
+- Paper 2 outputs: `data/processed/ensemble/grc/<run_id>/` (under `grc/` subdirectory)
+- Never mix the two CLIs or output directories.
+
 ## Known gaps
 
 - **No polling district polygons as GIS layer** — only community KML and PDFs in `data/reference/pdfs_to_digitize/`. Manual digitization needed.
 - **KML files** (community polling, SLA cadastral) may need CRS conversion before use in most GIS tools.
 - **HDB / cadastral layers** are large; no automatic join to electoral units in the pipeline.
 - **Census–subzone match** is incomplete: some URA subzones (non-residential, small) have no Census row.
+- **Paper 2 graph nodes lack minority population** — `pct_minority` attribute must be attached from Census ethnic-group CSV before GRC minority-capture metrics produce real values (currently defaults to 0).
+
+## Writeup layout
+
+| Path | Contents |
+|------|----------|
+| `writeup/paper1/` | Paper 1 (published on SocArXiv, April 2026) — permutation test + equal-pop ensemble |
+| `writeup/paper2/` | Paper 2 (in development) — variable-size GRC/SMC ensemble |
 
 ## QGIS project
 
