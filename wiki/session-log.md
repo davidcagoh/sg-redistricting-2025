@@ -1,5 +1,35 @@
 # Session Log
 
+## 2026-04-27 (session 18) — Option A ran; null result; method comparison memo written
+
+### What was done
+
+- **Option A post-processing implemented** (`src/analysis/grc/option_a.py`):
+  - `build_node_arrays`, `compute_district_stats`, `run_null_distribution`, `compute_actual_capture`, `compute_percentile_rank`, `run_option_a` — full pipeline
+  - 22 unit tests added (`tests/analysis/grc/test_option_a.py`); suite now 550 tests, all passing
+- **Option A ran against `seed_001` ensemble** (9,000 steps × 100 permutations = 900,000 null samples):
+  - Actual 2025 GRC minority %: **26.03%**, SMC: **23.03%** (+3.00 pp gap)
+  - Null mean: 25.65%, std: 1.02%
+  - Percentile rank: **64th** — p-value (GRC ≥ actual): **0.356**
+  - **Null result**: no evidence that actual GRC placement concentrates minority populations anomalously
+  - Results saved to `output/option_a/` (summary.json + null_grc_minority_pct.npy)
+- **Method comparison memo written** (`wiki/option-a-b-c-analysis.md`):
+  - Full explanation of Options A, B (infeasible), C (hypothetical sequential hierarchical)
+  - Key distinction: A tests label permutation, B tests boundary drawing, C is sequential approximation of B with ordering bias
+  - Why null result survives Option A's methodological limitations documented
+
+### State at end of session
+
+Clean. Option A complete. 550 tests green. Paper 2 first empirical result is a null finding (GRC placement not minority-optimised). Memo in wiki for review.
+
+### What to do next session
+
+1. Plot null distribution histogram with actual marker → `output/option_a/figure_null_hist.png`
+2. Begin `writeup/paper2/paper.tex` draft — introduce method, null finding, interpretation
+3. Consider whether paper 2 leads with the null (honest, interesting) or reserves it for §4 after method section
+
+---
+
 ## 2026-04-26 (session 17) — paper 1 robustness + pct_minority + GRC Option A decision
 
 ### What was done

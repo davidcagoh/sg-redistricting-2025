@@ -1,29 +1,25 @@
 # Project Wiki — Singapore Electoral Redistricting Analysis
 
-## Status (2026-04-19, session 15)
+## Status (2026-04-27, session 18)
 
-**Paper 1 compiled to PDF.** `writeup/paper1/paper.tex` is a clean LaTeX build (16 pages). Repo root reorganised. Ready for dissemination prep.
+**Paper 1 published (SocArXiv).** Paper 2 analysis underway: Option A null result obtained.
 
 | Phase | Status |
 |-------|--------|
-| Phase 0: Foundations | ✅ complete |
-| Phase 1: Graph | ✅ complete (332 nodes → 327 after filtering) |
-| Phase 2: MCMC skeleton | ✅ complete |
-| Phase 3: Metrics | ✅ complete |
-| Phase 4: Ensemble driver | ✅ complete |
-| Phase 5: Diff + Reporting | ✅ complete |
+| Phase 0–5: Pipeline | ✅ complete |
 | **Electoral profile analysis** | ✅ complete — findings.md |
 | **Boundary permutation test** | ✅ complete — p=0.012 |
-| **Paper 1 draft** | ✅ complete — writeup/paper1/draft.md |
-| **Paper 1 LaTeX / PDF** | ✅ complete — writeup/paper1/paper.pdf |
-| **Publication prep** | 🔴 not started — needs platform + pitch summary |
+| **Paper 1** | ✅ published on SocArXiv (April 2026) |
+| **MCMC robustness** | ✅ complete — seed_001 primary, seed_002 checked |
+| **pct_minority on graph nodes** | ✅ complete |
+| **Option A: GRC minority capture** | ✅ complete — null result (64th pct, p=0.356) |
+| **Paper 2 draft** | 🔴 not started |
 
 ## Next steps (immediately actionable)
 
-1. Write 1-page pitch summary for Rice Media / Mothership (choropleth lead image, plain-language permutation test)
-2. Set up Substack or personal site; establish citable URL before pitching
-3. Run second MCMC seed for robustness check (noted as limitation in §7)
-4. (Optional) Submit to SSRN or SocArXiv for a citable DOI
+1. Plot null distribution histogram with actual marker → `output/option_a/figure_null_hist.png`
+2. Begin `writeup/paper2/paper.tex` draft (method + null finding + interpretation)
+3. Decide framing: does paper 2 lead with the null, or hold it for §4 after method section?
 
 ---
 
@@ -42,6 +38,7 @@
 | [Session Log](session-log.md) | Chronological work log |
 | [Findings](findings.md) | All quantitative results (MCMC, malapportionment, demographics, permutation test) |
 | [Paper Plan](paper-plan.md) | Two-paper structure, dissemination strategy, paper 2 scope |
+| [Option A/B/C Analysis](option-a-b-c-analysis.md) | Method comparison memo: GRC minority capture options, null result, interpretation |
 
 ### Literature
 
