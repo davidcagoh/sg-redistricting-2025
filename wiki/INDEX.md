@@ -1,15 +1,16 @@
 # Project Wiki — Singapore Electoral Redistricting Analysis
 
-## Status (2026-04-27, session 18)
+## Status (2026-05-16, session 19)
 
-**Paper 1 published (SocArXiv).** Paper 2 analysis underway: Option A null result obtained.
+**Paper 1 v2 submitted to SocArXiv** (pre-moderation; canonical URL `https://osf.io/preprints/socarxiv/p7q2m`). Paper 2 analysis underway: Option A null result obtained.
 
 | Phase | Status |
 |-------|--------|
 | Phase 0–5: Pipeline | ✅ complete |
 | **Electoral profile analysis** | ✅ complete — findings.md |
 | **Boundary permutation test** | ✅ complete — p=0.012 |
-| **Paper 1** | ✅ published on SocArXiv (April 2026) |
+| **Paper 1 v1** | ✅ published on SocArXiv (April 2026) |
+| **Paper 1 v2** | 🟡 submitted 2026-05-16, in pre-moderation |
 | **MCMC robustness** | ✅ complete — seed_001 primary, seed_002 checked |
 | **pct_minority on graph nodes** | ✅ complete |
 | **Option A: GRC minority capture** | ✅ complete — null result (64th pct, p=0.356) |

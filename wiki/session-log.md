@@ -1,5 +1,30 @@
 # Session Log
 
+## 2026-05-16 (session 19) — Paper 1 v2 submitted to SocArXiv
+
+### What was done
+
+- **Submitted `writeup/paper1/paper.pdf` (commit `63deb71`, 16 pages, 583KB) as v2 to SocArXiv.** Same preprint record (`p7q2m`); now in pre-moderation queue.
+- **Motivation:** v1 was uploaded session 16 (2026-04-24) before the session-17 robustness work. Session 17 (commit `63deb71`, 2026-04-26) discovered the original primary ensemble `sg2025` (seed=42) was stuck (towns_split σ=0, max_abs_pop_dev σ=0 across 9,000 steps; KS D=0.994 vs an independent rerun), switched primary to `seed_001`, updated all ensemble statistics in §3, bolded `towns_split` as informative, and expanded §4 caveat + §7 limitations to disclose and document the robustness procedure. Substantive findings unchanged (p=0.012; 0th/100th-percentile rankings; seat–vote gap analysis).
+- **SocArXiv submission flow:** no separate version-notes / changelog field surfaced in the UI — the v2 file replaces v1 once moderation clears. v1 URL (`p7q2m_v1`) remains citable for anyone who already referenced it; canonical URL is now `https://osf.io/preprints/socarxiv/p7q2m` (versionless → latest accepted).
+- **Personal site link** updated to versionless URL: `davidcagoh.github.io` `selected-work.ts` commit `e085c82`.
+
+### State at end of session
+
+v2 in pre-moderation. Expected turnaround 1–3 business days; check back ~2026-05-21 if not live.
+
+### What to do next session
+
+1. Verify v2 is live on SocArXiv; if moderator requests changes, address and re-submit.
+2. Resume Paper 2 work — null distribution histogram + draft §1–§3 per session 18 plan.
+3. Consider whether to post a short transparency note (LinkedIn / personal site) about catching the stuck-chain bug — credibility signal, not weakness. Optional.
+
+### Decisions not made this session
+
+- Did **not** reply to the unsolicited OPAST / *Political Science International* (ISSN 2995-326X) journal invitation received ~2026-04-25. Identified as predatory (mass unsolicited mail addressed to "Dr. Goh"; OPAST publishes 135+ journals across all fields; no peer-review framing; on predatory-publisher watchlists). Action: delete, do not engage.
+
+---
+
 ## 2026-04-27 (session 18) — Option A ran; null result; method comparison memo written
 
 ### What was done
